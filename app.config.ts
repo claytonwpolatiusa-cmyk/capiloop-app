@@ -32,7 +32,7 @@ const env = {
   appSlug: "capiloop",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "/manus-storage/capiloop-app-icon_17206d8c.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -105,9 +105,9 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#F8FAF6",
         dark: {
-          backgroundColor: "#000000",
+          backgroundColor: "#151B14",
         },
       },
     ],
