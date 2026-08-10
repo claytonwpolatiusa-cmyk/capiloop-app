@@ -1,4 +1,5 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
+import { relations } from "drizzle-orm";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +26,162 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Partner (restaurant/bakery) table for CapiLoop merchants.
+ */
+export const partners = mysqlTable("partners", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  businessName: varchar("businessName", { length: 255 }).notNull(),
+  cnpj: varchar("cnpj", { length: 20 }).unique(),
+  category: varchar("category", { length: 64 }).notNull(),
+  address: text("address").notNull(),
+  latitude: varchar("latitude", { length: 32 }),
+  longitude: varchar("longitude", { length: 32 }),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }).notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "suspended"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Partner = typeof partners.$inferSelect;
+export type InsertPartner = typeof partners.$inferInsert;
+
+/**
+ * Daily surplus bag offerings from partners.
+ */
+export const bags = mysqlTable("bags", {
+  id: int("id").autoincrement().primaryKey(),
+  partnerId: int("partnerId").notNull().references(() => partners.id),
+  category: varchar("category", { length: 64 }).notNull(),
+  originalPrice: decimal("originalPrice", { precision: 10, scale: 2 }).notNull(),
+  salePrice: decimal("salePrice", { precision: 10, scale: 2 }).notNull(),
+  expectedItems: text("expectedItems").notNull(),
+  pickupStartTime: varchar("pickupStartTime", { length: 8 }).notNull(),
+  pickupEndTime: varchar("pickupEndTime", { length: 8 }).notNull(),
+  quantity: int("quantity").notNull().default(1),
+  reserved: int("reserved").notNull().default(0),
+  co2Kg: decimal("co2Kg", { precision: 5, scale: 2 }).notNull(),
+  imageUrl: text("imageUrl"),
+  status: mysqlEnum("status", ["active", "sold_out", "cancelled"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Bag = typeof bags.$inferSelect;
+export type InsertBag = typeof bags.$inferInsert;
+
+/**
+ * Customer addresses for delivery/pickup.
+ */
+export const addresses = mysqlTable("addresses", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  label: varchar("label", { length: 64 }),
+  street: varchar("street", { length: 255 }).notNull(),
+  number: varchar("number", { length: 20 }).notNull(),
+  complement: text("complement"),
+  neighborhood: varchar("neighborhood", { length: 128 }).notNull(),
+  city: varchar("city", { length: 128 }).notNull(),
+  state: varchar("state", { length: 2 }).notNull(),
+  zipCode: varchar("zipCode", { length: 10 }).notNull(),
+  isDefault: int("isDefault").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Address = typeof addresses.$inferSelect;
+export type InsertAddress = typeof addresses.$inferInsert;
+
+/**
+ * Customer payment methods (credit card, PIX, etc).
+ */
+export const paymentMethods = mysqlTable("paymentMethods", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  type: mysqlEnum("type", ["credit_card", "pix", "debit_card"]).notNull(),
+  token: text("token").notNull(),
+  lastFour: varchar("lastFour", { length: 4 }),
+  brand: varchar("brand", { length: 64 }),
+  isDefault: int("isDefault").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
+
+/**
+ * Customer reservations of bags.
+ */
+export const reservations = mysqlTable("reservations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  bagId: int("bagId").notNull().references(() => bags.id),
+  code: varchar("code", { length: 20 }).unique().notNull(),
+  status: mysqlEnum("status", ["pending", "confirmed", "picked_up", "cancelled"]).default("pending").notNull(),
+  pickupTime: varchar("pickupTime", { length: 8 }),
+  pickupDate: varchar("pickupDate", { length: 10 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Reservation = typeof reservations.$inferSelect;
+export type InsertReservation = typeof reservations.$inferInsert;
+
+/**
+ * Payment transactions.
+ */
+export const transactions = mysqlTable("transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  reservationId: int("reservationId").notNull().references(() => reservations.id),
+  userId: int("userId").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethodId: int("paymentMethodId").references(() => paymentMethods.id),
+  status: mysqlEnum("status", ["pending", "completed", "failed", "refunded"]).default("pending").notNull(),
+  paymentGatewayId: varchar("paymentGatewayId", { length: 255 }),
+  paymentGateway: varchar("paymentGateway", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = typeof transactions.$inferInsert;
+
+/**
+ * Relations for Drizzle ORM.
+ */
+export const usersRelations = relations(users, ({ many }) => ({
+  partners: many(partners),
+  addresses: many(addresses),
+  paymentMethods: many(paymentMethods),
+  reservations: many(reservations),
+}));
+
+export const partnersRelations = relations(partners, ({ one, many }) => ({
+  user: one(users, { fields: [partners.userId], references: [users.id] }),
+  bags: many(bags),
+}));
+
+export const bagsRelations = relations(bags, ({ one, many }) => ({
+  partner: one(partners, { fields: [bags.partnerId], references: [partners.id] }),
+  reservations: many(reservations),
+}));
+
+export const addressesRelations = relations(addresses, ({ one }) => ({
+  user: one(users, { fields: [addresses.userId], references: [users.id] }),
+}));
+
+export const paymentMethodsRelations = relations(paymentMethods, ({ one }) => ({
+  user: one(users, { fields: [paymentMethods.userId], references: [users.id] }),
+}));
+
+export const reservationsRelations = relations(reservations, ({ one }) => ({
+  user: one(users, { fields: [reservations.userId], references: [users.id] }),
+  bag: one(bags, { fields: [reservations.bagId], references: [bags.id] }),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  reservation: one(reservations, { fields: [transactions.reservationId], references: [reservations.id] }),
+  user: one(users, { fields: [transactions.userId], references: [users.id] }),
+  paymentMethod: one(paymentMethods, { fields: [transactions.paymentMethodId], references: [paymentMethods.id] }),
+}));
