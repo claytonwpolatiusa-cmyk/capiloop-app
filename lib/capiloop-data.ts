@@ -17,8 +17,8 @@ export type Offer = {
   image: ImageSourcePropType;
   accent: string;
   co2Kg: number;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
 };
 
 export const categories: { label: OfferCategory; icon: string }[] = [

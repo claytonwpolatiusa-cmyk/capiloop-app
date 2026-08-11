@@ -15,6 +15,13 @@
       "when": 1786396834182,
       "tag": "0001_massive_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786464758480,
+      "tag": "0002_broad_prism",
+      "breakpoints": true
     }
   ]
 }

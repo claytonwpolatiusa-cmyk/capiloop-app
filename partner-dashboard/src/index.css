@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-light text-dark;
+}
+
+button {
+  @apply transition-colors duration-200;
+}
+
+button:hover {
+  @apply opacity-90;
+}

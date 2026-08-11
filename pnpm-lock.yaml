@@ -110,6 +110,9 @@ importers:
       jose:
         specifier: 6.1.0
         version: 6.1.0
+      mercadopago:
+        specifier: ^3.3.0
+        version: 3.3.0
       mysql2:
         specifier: ^3.16.0
         version: 3.16.0
@@ -4506,6 +4509,10 @@ packages:
 
   memoize-one@6.0.0:
     resolution: {integrity: sha512-rkpe71W0N0c0Xz6QD0eJETuWAJGnJ9afsl1srmwPrI+yBCkge5EycXXbYRyvL29zZVUWQCY7InPRCv3GDXuZNw==}
+
+  mercadopago@3.3.0:
+    resolution: {integrity: sha512-TVtMopL6+CQOzU9hIVGVYxTO1DwOL9x3OmSdh7Qi/tawoLMSooQM0m/ttCC67vYsje+rjgZqNPoT9ItDQPm6Pg==}
+    engines: {node: '>=18'}
 
   merge-descriptors@1.0.3:
     resolution: {integrity: sha512-gaNvAS7TZ897/rVaZ0nMtAyxNyi/pdbjbAwUpFQpN70GqnVfOiXpeUUMKRBmzXaSQ8DdTX4/0ms62r2K+hE6mQ==}
@@ -10779,6 +10786,8 @@ snapshots:
   memoize-one@5.2.1: {}
 
   memoize-one@6.0.0: {}
+
+  mercadopago@3.3.0: {}
 
   merge-descriptors@1.0.3: {}
 

@@ -2,30 +2,25 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MapView, { Marker } from "react-native-maps";
 import { StyleSheet, Text, View } from "react-native";
 
-import { offers } from "@/lib/capiloop-data";
+import type { Offer } from "@/lib/capiloop-data";
 
-export function CapiLoopMap() {
+export function CapiLoopMap({ offers }: { offers: Offer[] }) {
+  const mappableOffers = offers.filter((offer): offer is Offer & { latitude: number; longitude: number } => (
+    typeof offer.latitude === "number" && Number.isFinite(offer.latitude)
+    && typeof offer.longitude === "number" && Number.isFinite(offer.longitude)
+  ));
   return (
     <View style={styles.mapShell}>
-      <MapView
-        style={StyleSheet.absoluteFill}
-        initialRegion={{ latitude: -25.4337, longitude: -49.2732, latitudeDelta: 0.028, longitudeDelta: 0.028 }}
-        showsUserLocation={false}
-        rotateEnabled={false}
-      >
-        {offers.map((offer) => (
+      <MapView style={StyleSheet.absoluteFill} initialRegion={{ latitude: -25.4337, longitude: -49.2732, latitudeDelta: 0.028, longitudeDelta: 0.028 }} showsUserLocation={false} rotateEnabled={false}>
+        {mappableOffers.map((offer) => (
           <Marker key={offer.id} coordinate={{ latitude: offer.latitude, longitude: offer.longitude }}>
             <View style={styles.mapMarker}><MaterialIcons name="shopping-bag" size={16} color="#151B14" /></View>
           </Marker>
         ))}
       </MapView>
-      <MapBadge />
+      <View style={styles.mapBadge}><MaterialIcons name="bolt" size={15} color="#151B14" /><Text style={styles.mapBadgeText}>{offers.length} {offers.length === 1 ? "sacola disponível" : "sacolas disponíveis"}</Text></View>
     </View>
   );
-}
-
-function MapBadge() {
-  return <View style={styles.mapBadge}><MaterialIcons name="bolt" size={15} color="#151B14" /><Text style={styles.mapBadgeText}>4 sacolas por perto</Text></View>;
 }
 
 const styles = StyleSheet.create({

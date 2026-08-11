@@ -1,3 +1,6 @@
 import type { ReactElement } from "react";
 
-export declare function CapiLoopMap(): ReactElement;
+import type { ReactElement } from "react";
+import type { Offer } from "@/lib/capiloop-data";
+
+export declare function CapiLoopMap({ offers }: { offers: Offer[] }): ReactElement;

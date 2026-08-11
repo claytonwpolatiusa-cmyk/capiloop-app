@@ -40,6 +40,10 @@ export const partners = mysqlTable("partners", {
   longitude: varchar("longitude", { length: 32 }),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 320 }).notNull(),
+  passwordHash: text("passwordHash"),
+  cnpjStatus: varchar("cnpjStatus", { length: 32 }),
+  cnpjVerifiedAt: timestamp("cnpjVerifiedAt"),
+  lastSignedInAt: timestamp("lastSignedInAt"),
   status: mysqlEnum("status", ["pending", "approved", "rejected", "suspended"]).default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -47,6 +51,21 @@ export const partners = mysqlTable("partners", {
 
 export type Partner = typeof partners.$inferSelect;
 export type InsertPartner = typeof partners.$inferInsert;
+
+/**
+ * Sessões opacas e revogáveis do portal de parceiros. Somente o hash SHA-256
+ * do token bearer é persistido, e nunca o token em texto puro.
+ */
+export const partnerSessions = mysqlTable("partnerSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  partnerId: int("partnerId").notNull().references(() => partners.id),
+  tokenHash: varchar("tokenHash", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PartnerSession = typeof partnerSessions.$inferSelect;
+export type InsertPartnerSession = typeof partnerSessions.$inferInsert;
 
 /**
  * Daily surplus bag offerings from partners.
@@ -160,6 +179,11 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const partnersRelations = relations(partners, ({ one, many }) => ({
   user: one(users, { fields: [partners.userId], references: [users.id] }),
   bags: many(bags),
+  sessions: many(partnerSessions),
+}));
+
+export const partnerSessionsRelations = relations(partnerSessions, ({ one }) => ({
+  partner: one(partners, { fields: [partnerSessions.partnerId], references: [partners.id] }),
 }));
 
 export const bagsRelations = relations(bags, ({ one, many }) => ({

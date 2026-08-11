@@ -1,14 +1,16 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { OfferCard } from "@/components/offer-card";
 import { ScreenContainer } from "@/components/screen-container";
-import { categories, offers } from "@/lib/capiloop-data";
+import { categories } from "@/lib/capiloop-data";
 import { useCapiLoop } from "@/lib/capiloop-store";
+import { useCatalog } from "@/lib/catalog";
 
 export default function DiscoverScreen() {
   const { impact } = useCapiLoop();
+  const { offers, isLoading, error, refresh } = useCatalog();
 
   return (
     <ScreenContainer className="flex-1" containerClassName="bg-background">
@@ -18,6 +20,7 @@ export default function DiscoverScreen() {
         renderItem={({ item }) => <OfferCard offer={item} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void refresh()} tintColor="#5E7D00" />}
         ListHeaderComponent={
           <View>
             <View style={styles.topbar}>
@@ -36,7 +39,7 @@ export default function DiscoverScreen() {
             <View style={styles.hero}>
               <Text style={styles.eyebrow}>HOJE, PERTO DE VOCÊ</Text>
               <Text style={styles.heroTitle}>Comida boa.{"\n"}Fim do desperdício.</Text>
-              <Text style={styles.heroCopy}>Surpreenda-se com sabores incríveis por menos.</Text>
+              <Text style={styles.heroCopy}>Sacolas reais, publicadas agora pelos parceiros CapiLoop.</Text>
             </View>
 
             <View style={styles.impactCard}>
@@ -49,9 +52,7 @@ export default function DiscoverScreen() {
               <MaterialIcons name="arrow-forward" size={21} color="#151B14" />
             </View>
 
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>O que você procura?</Text>
-            </View>
+            <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>O que você procura?</Text></View>
             <FlatList
               horizontal
               data={categories}
@@ -69,10 +70,18 @@ export default function DiscoverScreen() {
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>Sacolas de hoje</Text>
-                <Text style={styles.sectionSubtitle}>Retire ainda hoje e economize muito.</Text>
+                <Text style={styles.sectionSubtitle}>Disponibilidade publicada pelos restaurantes.</Text>
               </View>
-              <Text style={styles.countText}>{offers.length} perto</Text>
+              <Text style={styles.countText}>{offers.length} {offers.length === 1 ? "disponível" : "disponíveis"}</Text>
             </View>
+          </View>
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <MaterialIcons name={error ? "cloud-off" : "shopping-bag"} size={27} color="#5E7D00" />
+            <Text style={styles.emptyTitle}>{error ? "Não foi possível atualizar" : isLoading ? "Carregando sacolas" : "Ainda não há sacolas"}</Text>
+            <Text style={styles.emptyText}>{error ?? "Quando um parceiro publicar uma sacola, ela aparecerá aqui."}</Text>
+            {error ? <Pressable onPress={() => void refresh()} style={styles.retry}><Text style={styles.retryText}>Tentar novamente</Text></Pressable> : null}
           </View>
         }
       />
@@ -81,7 +90,7 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 24 },
+  content: { paddingBottom: 24, flexGrow: 1 },
   topbar: { marginHorizontal: 20, marginTop: 6, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   iconButton: { height: 40, width: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" },
   pressed: { opacity: 0.6 },
@@ -100,9 +109,14 @@ const styles = StyleSheet.create({
   sectionHeader: { marginHorizontal: 20, marginTop: 27, marginBottom: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.65 },
   sectionSubtitle: { color: "#697065", fontSize: 12, marginTop: 3 },
-  countText: { color: "#5E7D00", fontSize: 12, fontWeight: "800" },
+  countText: { color: "#5E7D00", fontSize: 12, fontWeight: "800", maxWidth: 86, textAlign: "right" },
   categories: { paddingLeft: 20, paddingRight: 12, gap: 10 },
   categoryItem: { alignItems: "center", width: 72, gap: 7 },
   categoryIcon: { width: 57, height: 57, borderRadius: 19, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" },
   categoryText: { color: "#4F574E", fontSize: 11, fontWeight: "700" },
+  empty: { alignItems: "center", paddingHorizontal: 42, paddingVertical: 34, gap: 8 },
+  emptyTitle: { color: "#151B14", fontSize: 16, fontWeight: "900", marginTop: 4 },
+  emptyText: { color: "#697065", fontSize: 12, lineHeight: 18, textAlign: "center" },
+  retry: { backgroundColor: "#151B14", paddingHorizontal: 15, paddingVertical: 10, borderRadius: 13, marginTop: 6 },
+  retryText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
 });

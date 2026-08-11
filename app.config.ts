@@ -21,11 +21,6 @@ const bundleId =
       return /^[a-zA-Z]/.test(segment) ? segment : "x" + segment;
     })
     .join(".") || "space.manus.app";
-// Extract timestamp from bundle ID and prefix with "manus" for deep link scheme
-// e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
-const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
-const schemeFromBundleId = `manus${timestamp}`;
-
 const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "CapiLoop",
@@ -33,7 +28,7 @@ const env = {
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
   logoUrl: "/manus-storage/capiloop-app-icon_17206d8c.png",
-  scheme: schemeFromBundleId,
+  scheme: "capiloop",
   iosBundleId: bundleId,
   androidPackage: bundleId,
 };
@@ -86,6 +81,12 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    [
+      "expo-web-browser",
+      {
+        experimentalLauncherActivity: true,
+      },
+    ],
     [
       "expo-audio",
       {

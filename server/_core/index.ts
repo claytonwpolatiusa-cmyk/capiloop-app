@@ -2,9 +2,12 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
+import { registerPartnerRoutes } from "../partner-rest";
+import { registerPaymentWebhook } from "../payment-webhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 
@@ -57,6 +60,8 @@ async function startServer() {
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  registerPartnerRoutes(app);
+  registerPaymentWebhook(app);
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
@@ -69,6 +74,12 @@ async function startServer() {
       createContext,
     }),
   );
+
+  const partnerDashboardDir = path.resolve(process.cwd(), "partner-dashboard", "dist");
+  app.use("/partners", express.static(partnerDashboardDir));
+  app.get("/partners/*", (_req, res) => {
+    res.sendFile(path.join(partnerDashboardDir, "index.html"));
+  });
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);

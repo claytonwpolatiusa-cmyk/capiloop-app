@@ -1,16 +1,16 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { StyleSheet, Text, View } from "react-native";
 
-import { offers } from "@/lib/capiloop-data";
+import type { Offer } from "@/lib/capiloop-data";
 
 const markerPositions = [{ top: 50, left: "27%" }, { top: 92, right: "23%" }, { bottom: 52, left: "43%" }, { bottom: 30, right: "15%" }] as const;
 
-export function CapiLoopMap() {
+export function CapiLoopMap({ offers }: { offers: Offer[] }) {
   return (
     <View style={[styles.mapShell, styles.webMap]}>
       <View style={styles.mapRoadOne} /><View style={styles.mapRoadTwo} /><View style={styles.mapRoadThree} />
-      {offers.map((offer, index) => <View key={offer.id} style={[styles.webMarker, markerPositions[index]]}><MaterialIcons name="shopping-bag" size={16} color="#151B14" /></View>)}
-      <View style={styles.mapBadge}><MaterialIcons name="bolt" size={15} color="#151B14" /><Text style={styles.mapBadgeText}>4 sacolas por perto</Text></View>
+      {offers.slice(0, markerPositions.length).map((offer, index) => <View key={offer.id} style={[styles.webMarker, markerPositions[index]]}><MaterialIcons name="shopping-bag" size={16} color="#151B14" /></View>)}
+      <View style={styles.mapBadge}><MaterialIcons name="bolt" size={15} color="#151B14" /><Text style={styles.mapBadgeText}>{offers.length} {offers.length === 1 ? "sacola disponível" : "sacolas disponíveis"}</Text></View>
     </View>
   );
 }
