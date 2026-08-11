@@ -17,7 +17,7 @@ type CatalogBag = {
   reserved: number;
   co2Kg: number | string;
   imageUrl: string | null;
-  partner: { businessName: string; address: string };
+  partner: { businessName: string; address: string; latitude: string | null; longitude: string | null };
 };
 
 type CatalogState = {
@@ -66,7 +66,7 @@ function mapBagToOffer(bag: CatalogBag): Offer {
     category,
     price: Number(bag.salePrice),
     originalPrice: Number(bag.originalPrice),
-    distance: "Retirada no local",
+    distance: "Distância disponível ao ativar a localização",
     pickupWindow: formatPickupWindow(bag.pickupStartTime, bag.pickupEndTime),
     address: bag.partner.address,
     stockLabel: remaining === 1 ? "Resta 1" : `Restam ${remaining}`,
@@ -74,6 +74,10 @@ function mapBagToOffer(bag: CatalogBag): Offer {
     image: bag.imageUrl ? { uri: bag.imageUrl } : fallbackImages[category],
     accent: accents[category],
     co2Kg: Number(bag.co2Kg),
+    latitude: bag.partner.latitude ? Number(bag.partner.latitude) : undefined,
+    longitude: bag.partner.longitude ? Number(bag.partner.longitude) : undefined,
+    pickupStartTime: bag.pickupStartTime,
+    pickupEndTime: bag.pickupEndTime,
   };
 }
 

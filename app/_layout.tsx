@@ -18,6 +18,8 @@ export default function RootLayout() {
             <Stack.Screen name="auth/welcome" options={{ presentation: "modal", animation: "slide_from_bottom", gestureEnabled: true }} />
             <Stack.Screen name="offer/[id]" options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="reservation/[id]" options={{ animation: "slide_from_bottom" }} />
+            <Stack.Screen name="orders/index" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="orders/[id]" options={{ animation: "slide_from_bottom" }} />
             <Stack.Screen name="checkout/result" options={{ animation: "fade", gestureEnabled: false }} />
           </Stack>
         </CatalogProvider>

@@ -16,7 +16,7 @@
 - [ ] Implementar tela de gerenciamento de endereços no app.
 - [x] Integrar MercadoPago ou Stripe para pagamentos com cartão e PIX.
 - [x] Criar telas de checkout e confirmação de pagamento.
-- [ ] Implementar tela de histórico de pedidos no app.
+- [x] Implementar tela de histórico de pedidos no app.
 
 ## Fase 3: Dashboard de Parceiros
 
@@ -65,3 +65,10 @@
  - [x] Persistir a sessão de cliente no dispositivo e proteger o fluxo de checkout.
  - [x] Retomar automaticamente a oferta ou reserva após autenticação.
  - [x] Validar a jornada de conta e os estados de erro, carregamento e sucesso.
+
+## Descoberta e pedidos
+
+- [x] Implementar filtros funcionais de distância, categoria e horário no catálogo de ofertas.
+- [x] Criar histórico de pedidos do cliente no perfil, com estados de reserva e pagamento.
+- [x] Exibir comprovante detalhado de retirada para pedidos confirmados.
+- [x] Validar os novos fluxos de filtros, histórico e comprovantes com testes determinísticos.

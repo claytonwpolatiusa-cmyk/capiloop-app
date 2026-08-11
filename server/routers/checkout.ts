@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { bags, partners, reservations, transactions } from "../../drizzle/schema";
 import { getDb } from "../db";
@@ -22,6 +22,25 @@ const cardInput = checkoutInput.extend({
 });
 
 type CreatedReservation = { id: number; code: string; price: number; description: string };
+
+type CustomerOrder = {
+  id: string;
+  code: string;
+  status: "pending" | "confirmed" | "picked_up" | "cancelled";
+  createdAt: Date;
+  pickupDate: string | null;
+  pickupTime: string | null;
+  pickupStartTime: string;
+  pickupEndTime: string;
+  store: string;
+  address: string;
+  category: string;
+  expectedItems: string;
+  price: number;
+  originalPrice: number;
+  paymentStatus: "pending" | "completed" | "failed" | "refunded" | null;
+  paymentGateway: string | null;
+};
 
 function transactionStatus(status: string) {
   if (status === "approved") return "completed" as const;
@@ -105,6 +124,44 @@ async function releaseReservation(reservationId: number, bagId: number) {
   await db.update(bags).set({ reserved: sql`GREATEST(${bags.reserved} - 1, 0)` }).where(eq(bags.id, bagId));
 }
 
+async function listCustomerOrders(userId: number): Promise<CustomerOrder[]> {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Banco de dados indisponível." });
+
+  const rows = await db
+    .select({ reservation: reservations, bag: bags, partner: partners, transaction: transactions })
+    .from(reservations)
+    .innerJoin(bags, eq(reservations.bagId, bags.id))
+    .innerJoin(partners, eq(bags.partnerId, partners.id))
+    .leftJoin(transactions, eq(transactions.reservationId, reservations.id))
+    .where(eq(reservations.userId, userId))
+    .orderBy(desc(reservations.createdAt), desc(transactions.createdAt));
+
+  const uniqueOrders = new Map<number, CustomerOrder>();
+  for (const row of rows) {
+    if (uniqueOrders.has(row.reservation.id)) continue;
+    uniqueOrders.set(row.reservation.id, {
+      id: String(row.reservation.id),
+      code: row.reservation.code,
+      status: row.reservation.status,
+      createdAt: row.reservation.createdAt,
+      pickupDate: row.reservation.pickupDate,
+      pickupTime: row.reservation.pickupTime,
+      pickupStartTime: row.bag.pickupStartTime,
+      pickupEndTime: row.bag.pickupEndTime,
+      store: row.partner.businessName,
+      address: row.partner.address,
+      category: row.bag.category,
+      expectedItems: row.bag.expectedItems,
+      price: Number(row.bag.salePrice),
+      originalPrice: Number(row.bag.originalPrice),
+      paymentStatus: row.transaction?.status ?? null,
+      paymentGateway: row.transaction?.paymentGateway ?? null,
+    });
+  }
+  return [...uniqueOrders.values()];
+}
+
 function mapGatewayError(error: unknown): never {
   if (error instanceof MercadoPagoConfigurationError) {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Os pagamentos estão sendo configurados. Tente novamente em breve." });
@@ -114,6 +171,14 @@ function mapGatewayError(error: unknown): never {
 }
 
 export const checkoutRouter = router({
+  history: protectedProcedure.query(({ ctx }) => listCustomerOrders(ctx.user.id)),
+
+  receipt: protectedProcedure.input(z.object({ reservationId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+    const order = (await listCustomerOrders(ctx.user.id)).find((item) => item.id === String(input.reservationId));
+    if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Comprovante não encontrado." });
+    return order;
+  }),
+
   configuration: protectedProcedure.query(() => ({
     pixEnabled: isMercadoPagoConfigured(),
     cardEnabled: isMercadoPagoConfigured() && Boolean(process.env.MERCADO_PAGO_PUBLIC_KEY?.trim()),

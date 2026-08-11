@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { ScreenContainer } from "@/components/screen-container";
 import { useAuth } from "@/hooks/use-auth";
+import { trpc } from "@/lib/trpc";
 
 const accountBenefits = [
   { icon: "receipt-long", title: "Reservas reunidas", detail: "Encontre seus comprovantes de retirada quando precisar." },
@@ -14,6 +15,7 @@ const accountBenefits = [
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const orders = trpc.checkout.history.useQuery(undefined, { enabled: isAuthenticated });
   const displayName = user?.name?.trim() || user?.email?.split("@")[0] || "Visitante";
   const initials = displayName
     .split(" ")
@@ -47,7 +49,8 @@ export default function ProfileScreen() {
           <View style={styles.loadingPanel}><ActivityIndicator color="#5E7D00" /><Text style={styles.loadingText}>Verificando sua sessão…</Text></View>
         ) : isAuthenticated ? (
           <View style={styles.authenticatedPanel}>
-            <View style={styles.authenticatedCopy}><Text style={styles.panelTitle}>Sua conta está pronta para resgatar.</Text><Text style={styles.panelBody}>As reservas confirmadas e o comprovante de retirada aparecerão aqui.</Text></View>
+            <View style={styles.authenticatedCopy}><Text style={styles.panelTitle}>Sua conta está pronta para resgatar.</Text><Text style={styles.panelBody}>{orders.isLoading ? "Carregando seus pedidos…" : orders.data?.length ? `${orders.data.length} ${orders.data.length === 1 ? "pedido registrado" : "pedidos registrados"} na sua conta.` : "Suas reservas confirmadas e o comprovante de retirada aparecerão aqui."}</Text></View>
+            <Pressable onPress={() => router.push("/orders" as never)} style={({ pressed }) => [styles.historyButton, pressed && styles.pressed]} accessibilityRole="button"><MaterialIcons name="receipt-long" size={17} color="#405500" /><Text style={styles.historyButtonText}>Ver histórico de pedidos</Text><MaterialIcons name="chevron-right" size={18} color="#405500" /></Pressable>
             <Pressable onPress={() => void logout()} style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]} accessibilityRole="button"><MaterialIcons name="logout" size={17} color="#B42318" /><Text style={styles.signOutText}>Sair da conta</Text></Pressable>
           </View>
         ) : (
@@ -99,6 +102,8 @@ const styles = StyleSheet.create({
   secondaryButton: { minHeight: 40, marginTop: 5, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3 },
   secondaryText: { color: "#527100", fontSize: 12, fontWeight: "900" },
   signOutButton: { minHeight: 42, borderRadius: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#F0CDC9", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
+  historyButton: { minHeight: 44, borderRadius: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D6E3BA", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, marginBottom: 8 },
+  historyButtonText: { color: "#405500", fontSize: 12, fontWeight: "900", flex: 0 },
   signOutText: { color: "#B42318", fontSize: 12, fontWeight: "900" },
   sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", letterSpacing: -0.6, marginTop: 27, marginBottom: 12 },
   benefitList: { borderRadius: 21, overflow: "hidden", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8DB" },

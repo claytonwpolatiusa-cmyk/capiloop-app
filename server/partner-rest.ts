@@ -57,6 +57,8 @@ function toPartnerJson(partner: Partner) {
     businessName: partner.businessName,
     category: partner.category,
     address: partner.address,
+    latitude: partner.latitude,
+    longitude: partner.longitude,
     phone: partner.phone,
     email: partner.email,
     status: partner.status,
