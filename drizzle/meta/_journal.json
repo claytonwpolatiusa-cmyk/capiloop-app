@@ -22,6 +22,13 @@
       "when": 1786464758480,
       "tag": "0002_broad_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786473129557,
+      "tag": "0003_nifty_electro",
+      "breakpoints": true
     }
   ]
 }

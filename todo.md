@@ -41,3 +41,19 @@
 - [x] Processar PIX e cartão via Mercado Pago com idempotência, tokenização e webhook assinado.
 - [x] Consumir o catálogo público e as reservas reais no aplicativo móvel.
 - [ ] Inserir credenciais de produção do Mercado Pago e executar pagamentos reais de homologação.
+
+## Aprovação manual de parceiros
+
+- [ ] Registrar novos parceiros como pendentes após a validação de CNPJ.
+- [ ] Criar API administrativa protegida para listar, aprovar e recusar parceiros.
+- [ ] Criar painel administrativo para revisar os dados empresariais e tomar decisões.
+- [ ] Exibir o status pendente, aprovado ou recusado no portal do parceiro e bloquear publicações não aprovadas.
+- [ ] Validar e documentar o fluxo de aprovação manual.
+
+## Experiência de navegação móvel
+
+- [x] Mapear os fluxos de descoberta, reserva, checkout e retirada com pontos de decisão claros.
+- [x] Priorizar atalhos, CTAs e informações de retirada para uso com uma mão.
+- [x] Adicionar estados vazios, carregamento e mensagens de orientação contextual.
+- [x] Adicionar transições sutis entre descoberta, detalhe, checkout e reserva.
+- [x] Validar a jornada de navegação e corrigir pontos de fricção observados.

@@ -7,6 +7,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerPartnerRoutes } from "../partner-rest";
+import { registerAdminRoutes } from "../admin-rest";
 import { registerPaymentWebhook } from "../payment-webhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -43,7 +44,7 @@ async function startServer() {
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CapiLoop-Admin-Token",
     );
     res.header("Access-Control-Allow-Credentials", "true");
 
@@ -61,6 +62,7 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerPartnerRoutes(app);
+  registerAdminRoutes(app);
   registerPaymentWebhook(app);
 
   app.get("/api/health", (_req, res) => {

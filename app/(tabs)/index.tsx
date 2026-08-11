@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
@@ -25,16 +26,16 @@ export default function DiscoverScreen() {
           <View>
             <View style={styles.topbar}>
               <CapiLoopBrand />
-              <Pressable accessibilityLabel="Notificações" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-                <MaterialIcons name="notifications-none" size={22} color="#151B14" />
+              <Pressable onPress={() => router.push("/(tabs)/bag")} accessibilityLabel="Abrir minhas sacolas" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+                <MaterialIcons name="shopping-bag" size={21} color="#151B14" />
               </Pressable>
             </View>
 
-            <View style={styles.locationRow}>
+            <Pressable onPress={() => router.push("/(tabs)/explore")} style={({ pressed }) => [styles.locationRow, pressed && styles.pressed]} accessibilityLabel="Explorar sacolas no mapa">
               <MaterialIcons name="location-on" size={16} color="#5E7D00" />
               <Text style={styles.locationText}>Centro, Curitiba</Text>
               <MaterialIcons name="keyboard-arrow-down" size={18} color="#697065" />
-            </View>
+            </Pressable>
 
             <View style={styles.hero}>
               <Text style={styles.eyebrow}>HOJE, PERTO DE VOCÊ</Text>
@@ -42,7 +43,7 @@ export default function DiscoverScreen() {
               <Text style={styles.heroCopy}>Sacolas reais, publicadas agora pelos parceiros CapiLoop.</Text>
             </View>
 
-            <View style={styles.impactCard}>
+            <Pressable onPress={() => router.push("/(tabs)/impact")} style={({ pressed }) => [styles.impactCard, pressed && styles.cardPressed]} accessibilityLabel="Ver meu impacto">
               <View style={styles.impactIcon}><MaterialIcons name="bolt" size={22} color="#151B14" /></View>
               <View style={styles.impactTextBlock}>
                 <Text style={styles.impactLabel}>SEU IMPACTO</Text>
@@ -50,6 +51,11 @@ export default function DiscoverScreen() {
                 <Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas por você</Text>
               </View>
               <MaterialIcons name="arrow-forward" size={21} color="#151B14" />
+            </Pressable>
+
+            <View style={styles.flowCard}>
+              <View style={styles.flowCopy}><Text style={styles.flowTitle}>Reserve em três passos</Text><Text style={styles.flowText}>Escolha, pague com segurança e retire no horário indicado.</Text></View>
+              <View style={styles.flowSteps}><Text style={styles.flowStep}>1</Text><MaterialIcons name="arrow-forward" size={13} color="#5E7D00" /><Text style={styles.flowStep}>2</Text><MaterialIcons name="arrow-forward" size={13} color="#5E7D00" /><Text style={styles.flowStep}>3</Text></View>
             </View>
 
             <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>O que você procura?</Text></View>
@@ -60,10 +66,10 @@ export default function DiscoverScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categories}
               renderItem={({ item }) => (
-                <View style={styles.categoryItem}>
+                <Pressable onPress={() => router.push("/(tabs)/explore")} accessibilityLabel={`Explorar sacolas de ${item.label}`} style={({ pressed }) => [styles.categoryItem, pressed && styles.pressed]}>
                   <View style={styles.categoryIcon}><MaterialIcons name={item.icon as never} size={21} color="#151B14" /></View>
                   <Text style={styles.categoryText}>{item.label}</Text>
-                </View>
+                </Pressable>
               )}
             />
 
@@ -72,7 +78,7 @@ export default function DiscoverScreen() {
                 <Text style={styles.sectionTitle}>Sacolas de hoje</Text>
                 <Text style={styles.sectionSubtitle}>Disponibilidade publicada pelos restaurantes.</Text>
               </View>
-              <Text style={styles.countText}>{offers.length} {offers.length === 1 ? "disponível" : "disponíveis"}</Text>
+              <Pressable onPress={() => router.push("/(tabs)/explore")} hitSlop={8} style={({ pressed }) => pressed && styles.pressed} accessibilityLabel="Ver ofertas no mapa"><Text style={styles.mapLink}>Ver no mapa</Text></Pressable>
             </View>
           </View>
         }
@@ -101,15 +107,20 @@ const styles = StyleSheet.create({
   heroTitle: { color: "#151B14", fontSize: 33, lineHeight: 38, letterSpacing: -1.6, fontWeight: "900", marginTop: 8 },
   heroCopy: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 9 },
   impactCard: { marginHorizontal: 20, marginTop: 22, borderRadius: 22, padding: 16, backgroundColor: "#A5DF00", flexDirection: "row", alignItems: "center", gap: 12 },
+  cardPressed: { opacity: 0.88, transform: [{ scale: 0.99 }] },
   impactIcon: { height: 39, width: 39, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.52)" },
   impactTextBlock: { flex: 1 },
   impactLabel: { color: "#405500", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
   impactValue: { color: "#151B14", fontSize: 14, fontWeight: "900", marginTop: 3 },
   impactCopy: { color: "#425500", fontSize: 11, fontWeight: "700", marginTop: 2 },
+  flowCard: { marginHorizontal: 20, marginTop: 11, padding: 15, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", flexDirection: "row", alignItems: "center", gap: 12 },
+  flowCopy: { flex: 1 }, flowTitle: { color: "#151B14", fontSize: 13, fontWeight: "900" }, flowText: { color: "#697065", fontSize: 11, lineHeight: 15, marginTop: 3 },
+  flowSteps: { flexDirection: "row", alignItems: "center", gap: 4, paddingLeft: 2 }, flowStep: { width: 20, height: 20, borderRadius: 10, backgroundColor: "#ECF6CD", color: "#425500", fontSize: 10, fontWeight: "900", textAlign: "center", lineHeight: 20 },
   sectionHeader: { marginHorizontal: 20, marginTop: 27, marginBottom: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.65 },
   sectionSubtitle: { color: "#697065", fontSize: 12, marginTop: 3 },
   countText: { color: "#5E7D00", fontSize: 12, fontWeight: "800", maxWidth: 86, textAlign: "right" },
+  mapLink: { color: "#5E7D00", fontSize: 12, fontWeight: "900" },
   categories: { paddingLeft: 20, paddingRight: 12, gap: 10 },
   categoryItem: { alignItems: "center", width: 72, gap: 7 },
   categoryIcon: { width: 57, height: 57, borderRadius: 19, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" },
