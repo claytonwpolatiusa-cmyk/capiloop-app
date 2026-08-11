@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { startOAuthLogin } from "@/constants/oauth";
@@ -12,30 +12,27 @@ import { useCatalog } from "@/lib/catalog";
 import { useCapiLoop } from "@/lib/capiloop-store";
 import { createTRPCClient } from "@/lib/trpc";
 import { useAuth } from "@/hooks/use-auth";
+import { savePendingCheckoutOffer } from "@/lib/auth-resume";
 
 export default function OfferDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, resumeCheckout } = useLocalSearchParams<{ id: string; resumeCheckout?: string }>();
   const { getOffer, isLoading } = useCatalog();
   const offer = getOffer(id);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { reservations, recordRemoteReservation, updateRemoteReservationStatus } = useCapiLoop();
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+  const resumedCheckout = useRef(false);
   const currentReservation = reservations.find((reservation) => reservation.offerId === id && reservation.paymentStatus !== "failed");
 
-  if (!offer) {
-    return <ScreenContainer className="items-center justify-center px-8"><Text className="text-center text-foreground">{isLoading ? "Atualizando oferta…" : "Esta sacola não está mais disponível."}</Text></ScreenContainer>;
-  }
-
-  const startCheckout = async () => {
+  const startCheckout = useCallback(async () => {
+    if (!offer) return;
     if (currentReservation) {
       router.push({ pathname: "/reservation/[id]", params: { id: currentReservation.id } });
       return;
     }
     if (!isAuthenticated) {
-      Alert.alert("Entre para reservar", "A reserva é vinculada à sua conta para garantir a retirada.", [
-        { text: "Agora não", style: "cancel" },
-        { text: "Fazer login", onPress: () => void startOAuthLogin() },
-      ]);
+      await savePendingCheckoutOffer(id);
+      router.push({ pathname: "/auth/welcome", params: { mode: "signin", offerId: id } });
       return;
     }
     const bagId = Number(offer.id);
@@ -69,7 +66,18 @@ export default function OfferDetailScreen() {
     } finally {
       setIsStartingCheckout(false);
     }
-  };
+  }, [currentReservation, id, isAuthenticated, offer, recordRemoteReservation, updateRemoteReservationStatus]);
+
+  useEffect(() => {
+    if (resumeCheckout !== "true" || authLoading || !isAuthenticated || resumedCheckout.current) return;
+    resumedCheckout.current = true;
+    router.setParams({ resumeCheckout: "" });
+    void startCheckout();
+  }, [authLoading, isAuthenticated, resumeCheckout, startCheckout]);
+
+  if (!offer) {
+    return <ScreenContainer className="items-center justify-center px-8"><Text className="text-center text-foreground">{isLoading ? "Atualizando oferta…" : "Esta sacola não está mais disponível."}</Text></ScreenContainer>;
+  }
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} className="flex-1">
@@ -97,7 +105,7 @@ export default function OfferDetailScreen() {
       </ScrollView>
       <View style={styles.actionBar}>
         <View><Text style={styles.original}>{formatCurrency(offer.originalPrice)}</Text><Text style={styles.price}>{formatCurrency(offer.price)}</Text></View>
-        <Pressable accessibilityLabel={currentReservation ? "Ver reserva" : !isAuthenticated ? "Entrar para reservar" : "Reservar e pagar"} disabled={isStartingCheckout} onPress={() => void startCheckout()} style={({ pressed }) => [styles.reserveButton, (pressed || isStartingCheckout) && { opacity: 0.78, transform: [{ scale: 0.98 }] }]}>{isStartingCheckout ? <ActivityIndicator size="small" color="#FFFFFF" /> : <><Text style={styles.reserveText}>{currentReservation ? "Ver reserva" : !isAuthenticated ? "Entrar para reservar" : "Reservar e pagar"}</Text><MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" /></>}</Pressable>
+        <Pressable accessibilityLabel={currentReservation ? "Ver reserva" : authLoading ? "Verificando conta" : !isAuthenticated ? "Entrar para reservar" : "Reservar e pagar"} disabled={isStartingCheckout || authLoading} onPress={() => void startCheckout()} style={({ pressed }) => [styles.reserveButton, (pressed || isStartingCheckout || authLoading) && { opacity: 0.78, transform: [{ scale: 0.98 }] }]}>{isStartingCheckout || authLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : <><Text style={styles.reserveText}>{currentReservation ? "Ver reserva" : !isAuthenticated ? "Entrar para reservar" : "Reservar e pagar"}</Text><MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" /></>}</Pressable>
       </View>
     </ScreenContainer>
   );

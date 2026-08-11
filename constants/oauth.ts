@@ -1,5 +1,8 @@
 import * as Linking from "expo-linking";
-import * as ReactNative from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const env = {
   portal: process.env.EXPO_PUBLIC_OAUTH_PORTAL_URL ?? "",
@@ -30,7 +33,7 @@ export function getApiBaseUrl(): string {
   }
 
   // On web, derive from current hostname by replacing port 8081 with 3000
-  if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
+  if (Platform.OS === "web" && typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
     // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
@@ -63,13 +66,13 @@ const encodeState = (value: string) => {
  * - Native: uses deep link scheme
  */
 export const getRedirectUri = () => {
-  if (ReactNative.Platform.OS === "web") {
+  if (Platform.OS === "web") {
     return `${getApiBaseUrl()}/api/oauth/callback`;
-  } else {
-    return Linking.createURL("/oauth/callback", {
-      scheme: env.deepLinkScheme,
-    });
   }
+
+  return Linking.createURL("oauth/callback", {
+    scheme: env.deepLinkScheme,
+  });
 };
 
 export const getLoginUrl = () => {
@@ -88,17 +91,18 @@ export const getLoginUrl = () => {
 /**
  * Start OAuth login flow.
  *
- * On native platforms (iOS/Android), open the system browser directly so
- * the OAuth callback returns via deep link to the app.
+ * On native platforms (iOS/Android), open an authentication session so the
+ * OAuth callback returns via the app deep link. The caller forwards the URL
+ * to the Expo Router callback screen, which exchanges the code securely.
  *
  * On web, this simply redirects to the login URL.
  *
- * @returns Always null, the callback is handled via deep link.
+ * @returns The native callback URL when the session completes, otherwise null.
  */
 export async function startOAuthLogin(): Promise<string | null> {
   const loginUrl = getLoginUrl();
 
-  if (ReactNative.Platform.OS === "web") {
+  if (Platform.OS === "web") {
     // On web, just redirect
     if (typeof window !== "undefined") {
       window.location.href = loginUrl;
@@ -106,20 +110,11 @@ export async function startOAuthLogin(): Promise<string | null> {
     return null;
   }
 
-  const supported = await Linking.canOpenURL(loginUrl);
-  if (!supported) {
-    console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
-    // 可考虑抛出错误或返回错误状态，让调用方处理
-    return null;
-  }
-
   try {
-    await Linking.openURL(loginUrl);
+    const result = await WebBrowser.openAuthSessionAsync(loginUrl, getRedirectUri());
+    return result.type === "success" ? result.url : null;
   } catch (error) {
     console.error("[OAuth] Failed to open login URL:", error);
-    // 可考虑抛出错误让调用方处理
+    throw error;
   }
-
-  // The OAuth callback will reopen the app via deep link.
-  return null;
 }

@@ -11,8 +11,8 @@
 
 ## Fase 2: Autenticação e Pagamentos
 
-- [ ] Criar rotas de autenticação OAuth no backend (login/logout/refresh).
-- [ ] Implementar telas de login e cadastro no app móvel.
+ - [x] Criar rotas de autenticação OAuth no backend (login/logout/refresh).
+ - [x] Implementar telas de login e cadastro no app móvel.
 - [ ] Implementar tela de gerenciamento de endereços no app.
 - [x] Integrar MercadoPago ou Stripe para pagamentos com cartão e PIX.
 - [x] Criar telas de checkout e confirmação de pagamento.
@@ -57,3 +57,11 @@
 - [x] Adicionar estados vazios, carregamento e mensagens de orientação contextual.
 - [x] Adicionar transições sutis entre descoberta, detalhe, checkout e reserva.
 - [x] Validar a jornada de navegação e corrigir pontos de fricção observados.
+
+## Conta do cliente
+
+ - [x] Definir a jornada nativa de entrada, cadastro, recuperação e retorno à reserva.
+ - [x] Criar telas de login, cadastro e recuperação com validação acessível de campos.
+ - [x] Persistir a sessão de cliente no dispositivo e proteger o fluxo de checkout.
+ - [x] Retomar automaticamente a oferta ou reserva após autenticação.
+ - [x] Validar a jornada de conta e os estados de erro, carregamento e sucesso.
