@@ -53,3 +53,8 @@
 - [x] Diagnosticar e restaurar a exibição das sacolas disponíveis na tela principal.
 - [x] Reorganizar a tela de descoberta para priorizar busca, filtros e ofertas reserváveis.
 - [x] Validar os estados de catálogo carregando, com ofertas, sem ofertas e em erro.
+
+## Correção de carregamento
+
+- [x] Restaurar a rota de pedido ausente que impede o carregamento da tela principal na web.
+- [x] Validar novamente a renderização da descoberta após corrigir a rota.
