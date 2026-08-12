@@ -3,7 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ImageSourcePropType } from "react-native";
 
 import { getApiBaseUrl } from "@/constants/oauth";
-import type { Offer, OfferCategory } from "@/lib/capiloop-data";
+import { offers as referenceOffers, type Offer, type OfferCategory } from "@/lib/capiloop-data";
+import { resolveCatalogOffers } from "@/lib/catalog-utils";
 
 type CatalogBag = {
   id: number;
@@ -17,13 +18,14 @@ type CatalogBag = {
   reserved: number;
   co2Kg: number | string;
   imageUrl: string | null;
-  partner: { businessName: string; address: string; latitude: string | null; longitude: string | null };
+  partner: { businessName: string; address: string };
 };
 
 type CatalogState = {
   offers: Offer[];
   isLoading: boolean;
   error: string | null;
+  isReferenceCatalog: boolean;
   refresh: () => Promise<void>;
   getOffer: (id?: string | string[]) => Offer | undefined;
 };
@@ -43,6 +45,8 @@ const accents: Record<OfferCategory, string> = {
   Mercado: "#A5DF00",
   Restaurante: "#E7B5CE",
 };
+
+const referenceCatalogOffers: Offer[] = referenceOffers.map((offer) => ({ ...offer, source: "reference" }));
 
 function normalizeCategory(value: string): OfferCategory {
   return ["Padaria", "Café", "Mercado", "Restaurante"].includes(value) ? (value as OfferCategory) : "Restaurante";
@@ -66,7 +70,7 @@ function mapBagToOffer(bag: CatalogBag): Offer {
     category,
     price: Number(bag.salePrice),
     originalPrice: Number(bag.originalPrice),
-    distance: "Distância disponível ao ativar a localização",
+    distance: "Retirada no local",
     pickupWindow: formatPickupWindow(bag.pickupStartTime, bag.pickupEndTime),
     address: bag.partner.address,
     stockLabel: remaining === 1 ? "Resta 1" : `Restam ${remaining}`,
@@ -74,10 +78,7 @@ function mapBagToOffer(bag: CatalogBag): Offer {
     image: bag.imageUrl ? { uri: bag.imageUrl } : fallbackImages[category],
     accent: accents[category],
     co2Kg: Number(bag.co2Kg),
-    latitude: bag.partner.latitude ? Number(bag.partner.latitude) : undefined,
-    longitude: bag.partner.longitude ? Number(bag.partner.longitude) : undefined,
-    pickupStartTime: bag.pickupStartTime,
-    pickupEndTime: bag.pickupEndTime,
+    source: "live",
   };
 }
 
@@ -89,7 +90,7 @@ async function fetchCatalog(): Promise<Offer[]> {
 }
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [liveOffers, setLiveOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,8 +98,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      setOffers(await fetchCatalog());
+      setLiveOffers(await fetchCatalog());
     } catch (cause) {
+      setLiveOffers([]);
       setError(cause instanceof Error ? cause.message : "Não foi possível atualizar o catálogo.");
     } finally {
       setIsLoading(false);
@@ -109,13 +111,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  const { offers, isReferenceCatalog } = resolveCatalogOffers(liveOffers, referenceCatalogOffers);
+
   const value = useMemo<CatalogState>(() => ({
     offers,
     isLoading,
     error,
+    isReferenceCatalog,
     refresh,
     getOffer: (id) => offers.find((offer) => offer.id === String(id)),
-  }), [error, isLoading, offers, refresh]);
+  }), [error, isLoading, isReferenceCatalog, offers, refresh]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

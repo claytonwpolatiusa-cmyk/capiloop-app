@@ -13,14 +13,11 @@ export default function RootLayout() {
       <CapiLoopProvider>
         <CatalogProvider>
           <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false, animation: "slide_from_right", animationDuration: 220, gestureEnabled: true }}>
+          <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="auth/welcome" options={{ presentation: "modal", animation: "slide_from_bottom", gestureEnabled: true }} />
-            <Stack.Screen name="offer/[id]" options={{ animation: "slide_from_right" }} />
-            <Stack.Screen name="reservation/[id]" options={{ animation: "slide_from_bottom" }} />
-            <Stack.Screen name="orders/index" options={{ animation: "slide_from_right" }} />
-            <Stack.Screen name="orders/[id]" options={{ animation: "slide_from_bottom" }} />
-            <Stack.Screen name="checkout/result" options={{ animation: "fade", gestureEnabled: false }} />
+            <Stack.Screen name="offer/[id]" />
+            <Stack.Screen name="reservation/[id]" options={{ animation: "fade" }} />
+            <Stack.Screen name="checkout/result" options={{ animation: "fade" }} />
           </Stack>
         </CatalogProvider>
       </CapiLoopProvider>

@@ -1,83 +1,27 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import * as Location from "expo-location";
-import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { OfferCard } from "@/components/offer-card";
 import { ScreenContainer } from "@/components/screen-container";
-import { categories } from "@/lib/capiloop-data";
+import { categories, type OfferCategory } from "@/lib/capiloop-data";
 import { useCapiLoop } from "@/lib/capiloop-store";
 import { useCatalog } from "@/lib/catalog";
-import { filterOffers, type DistanceFilter, type TimeFilter, type UserCoordinates } from "@/lib/offer-filters";
-
-const distanceOptions: { label: string; value: DistanceFilter }[] = [
-  { label: "Até 1 km", value: 1 },
-  { label: "Até 3 km", value: 3 },
-  { label: "Até 5 km", value: 5 },
-];
-
-const timeOptions: { label: string; value: TimeFilter }[] = [
-  { label: "Manhã", value: "morning" },
-  { label: "Tarde", value: "afternoon" },
-  { label: "Noite", value: "evening" },
-];
 
 export default function DiscoverScreen() {
   const { impact } = useCapiLoop();
-  const { offers, isLoading, error, refresh } = useCatalog();
-  const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number]["label"] | null>(null);
-  const [selectedDistance, setSelectedDistance] = useState<DistanceFilter>(null);
-  const [selectedTime, setSelectedTime] = useState<TimeFilter>(null);
-  const [location, setLocation] = useState<UserCoordinates | null>(null);
-  const [locationMessage, setLocationMessage] = useState<string | null>(null);
-  const [filtersVisible, setFiltersVisible] = useState(false);
-
-  const filteredOffers = useMemo(
-    () => filterOffers({ offers, category: selectedCategory, maxDistanceKm: selectedDistance, time: selectedTime, origin: location }),
-    [location, offers, selectedCategory, selectedDistance, selectedTime],
+  const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
+  const [selectedCategory, setSelectedCategory] = useState<OfferCategory | "Todas">("Todas");
+  const displayedOffers = useMemo(
+    () => selectedCategory === "Todas" ? offers : offers.filter((offer) => offer.category === selectedCategory),
+    [offers, selectedCategory],
   );
-
-  const hasActiveFilters = Boolean(selectedCategory || selectedDistance || selectedTime);
-
-  const requestLocation = async () => {
-    setLocationMessage(null);
-    const servicesEnabled = await Location.hasServicesEnabledAsync();
-    if (!servicesEnabled) {
-      setLocationMessage("Ative os serviços de localização para filtrar por distância.");
-      return false;
-    }
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (permission.status !== "granted") {
-      setLocationMessage("A localização é opcional, mas necessária para o filtro de distância.");
-      return false;
-    }
-    const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-    setLocation({ latitude: current.coords.latitude, longitude: current.coords.longitude });
-    return true;
-  };
-
-  const chooseDistance = async (distance: DistanceFilter) => {
-    if (selectedDistance === distance) {
-      setSelectedDistance(null);
-      return;
-    }
-    if (!location && !(await requestLocation())) return;
-    setSelectedDistance(distance);
-  };
-
-  const clearFilters = () => {
-    setSelectedCategory(null);
-    setSelectedDistance(null);
-    setSelectedTime(null);
-    setLocationMessage(null);
-  };
 
   return (
     <ScreenContainer className="flex-1" containerClassName="bg-background">
       <FlatList
-        data={filteredOffers}
+        data={displayedOffers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <OfferCard offer={item} />}
         showsVerticalScrollIndicator={false}
@@ -87,75 +31,71 @@ export default function DiscoverScreen() {
           <View>
             <View style={styles.topbar}>
               <CapiLoopBrand />
-              <Pressable onPress={() => router.push("/(tabs)/bag")} accessibilityLabel="Abrir minhas sacolas" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
-                <MaterialIcons name="shopping-bag" size={21} color="#151B14" />
+              <Pressable accessibilityLabel="Notificações" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+                <MaterialIcons name="notifications-none" size={22} color="#151B14" />
               </Pressable>
             </View>
 
-            <Pressable onPress={() => router.push("/(tabs)/explore")} style={({ pressed }) => [styles.locationRow, pressed && styles.pressed]} accessibilityLabel="Explorar sacolas no mapa">
+            <View style={styles.locationRow}>
               <MaterialIcons name="location-on" size={16} color="#5E7D00" />
               <Text style={styles.locationText}>Centro, Curitiba</Text>
               <MaterialIcons name="keyboard-arrow-down" size={18} color="#697065" />
-            </Pressable>
+            </View>
 
             <View style={styles.hero}>
-              <Text style={styles.eyebrow}>HOJE, PERTO DE VOCÊ</Text>
-              <Text style={styles.heroTitle}>Comida boa.{"\n"}Fim do desperdício.</Text>
-              <Text style={styles.heroCopy}>Sacolas reais, publicadas agora pelos parceiros CapiLoop.</Text>
+              <Text style={styles.eyebrow}>SACOLAS PERTO DE VOCÊ</Text>
+              <Text style={styles.heroTitle}>Resgate uma boa surpresa hoje.</Text>
+              <Text style={styles.heroCopy}>Escolha uma categoria e encontre a próxima retirada disponível.</Text>
             </View>
 
-            <Pressable onPress={() => router.push("/(tabs)/impact")} style={({ pressed }) => [styles.impactCard, pressed && styles.cardPressed]} accessibilityLabel="Ver meu impacto">
-              <View style={styles.impactIcon}><MaterialIcons name="bolt" size={22} color="#151B14" /></View>
-              <View style={styles.impactTextBlock}>
-                <Text style={styles.impactLabel}>SEU IMPACTO</Text>
-                <Text style={styles.impactValue}>{impact.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂ evitados</Text>
-                <Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas por você</Text>
-              </View>
-              <MaterialIcons name="arrow-forward" size={21} color="#151B14" />
-            </Pressable>
-
-            <View style={styles.flowCard}>
-              <View style={styles.flowCopy}><Text style={styles.flowTitle}>Reserve em três passos</Text><Text style={styles.flowText}>Escolha, pague com segurança e retire no horário indicado.</Text></View>
-              <View style={styles.flowSteps}><Text style={styles.flowStep}>1</Text><MaterialIcons name="arrow-forward" size={13} color="#5E7D00" /><Text style={styles.flowStep}>2</Text><MaterialIcons name="arrow-forward" size={13} color="#5E7D00" /><Text style={styles.flowStep}>3</Text></View>
+            <View style={styles.impactCard}>
+              <View style={styles.impactIcon}><MaterialIcons name="eco" size={19} color="#151B14" /></View>
+              <Text style={styles.impactValue}>{impact.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂ evitados</Text>
+              <Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas</Text>
             </View>
 
-            <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>O que você procura?</Text></View>
+            <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Encontre sua sacola</Text></View>
             <FlatList
               horizontal
-              data={categories}
+              data={[{ label: "Todas", icon: "apps" }, ...categories]}
               keyExtractor={(item) => item.label}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categories}
               renderItem={({ item }) => (
-                <Pressable onPress={() => { setSelectedCategory((current) => current === item.label ? null : item.label); setFiltersVisible(true); }} accessibilityLabel={`Filtrar por ${item.label}`} style={({ pressed }) => [styles.categoryItem, pressed && styles.pressed]}>
-                  <View style={[styles.categoryIcon, selectedCategory === item.label && styles.categoryIconActive]}><MaterialIcons name={item.icon as never} size={21} color="#151B14" /></View>
+                <Pressable
+                  onPress={() => setSelectedCategory(item.label as OfferCategory | "Todas")}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedCategory === item.label }}
+                  style={({ pressed }) => [styles.categoryItem, selectedCategory === item.label && styles.categoryItemActive, pressed && styles.pressed]}
+                >
+                  <View style={[styles.categoryIcon, selectedCategory === item.label && styles.categoryIconActive]}><MaterialIcons name={item.icon as never} size={20} color="#151B14" /></View>
                   <Text style={[styles.categoryText, selectedCategory === item.label && styles.categoryTextActive]}>{item.label}</Text>
                 </Pressable>
               )}
             />
 
+            {isReferenceCatalog ? (
+              <View style={styles.referenceNotice}>
+                <MaterialIcons name="info-outline" size={17} color="#5E7D00" />
+                <Text style={styles.referenceText}>Veja exemplos de sacolas locais enquanto novos parceiros publicam as próximas retiradas.</Text>
+              </View>
+            ) : null}
+
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>Sacolas de hoje</Text>
-                <Text style={styles.sectionSubtitle}>{hasActiveFilters ? `${filteredOffers.length} ${filteredOffers.length === 1 ? "resultado" : "resultados"} com os filtros aplicados.` : "Disponibilidade publicada pelos restaurantes."}</Text>
+                <Text style={styles.sectionTitle}>{selectedCategory === "Todas" ? "Sacolas disponíveis" : selectedCategory}</Text>
+                <Text style={styles.sectionSubtitle}>{isReferenceCatalog ? "Inspire-se e volte para ver novas publicações." : "Reserve agora e retire no horário indicado."}</Text>
               </View>
-              <Pressable onPress={() => setFiltersVisible((visible) => !visible)} hitSlop={8} style={({ pressed }) => [styles.filterToggle, pressed && styles.pressed]} accessibilityLabel={filtersVisible ? "Ocultar filtros" : "Mostrar filtros"}><MaterialIcons name="tune" size={16} color="#527100" /><Text style={styles.mapLink}>Filtros</Text></Pressable>
+              <Text style={styles.countText}>{displayedOffers.length} {displayedOffers.length === 1 ? "sacola" : "sacolas"}</Text>
             </View>
-
-            {filtersVisible ? <View style={styles.filtersPanel}>
-              <View style={styles.filterGroup}><Text style={styles.filterLabel}>Distância</Text><View style={styles.filterChips}>{distanceOptions.map((option) => <Pressable key={option.label} onPress={() => void chooseDistance(option.value)} style={({ pressed }) => [styles.filterChip, selectedDistance === option.value && styles.filterChipActive, pressed && styles.pressed]} accessibilityRole="button"><Text style={[styles.filterChipText, selectedDistance === option.value && styles.filterChipTextActive]}>{option.label}</Text></Pressable>)}</View></View>
-              <View style={styles.filterGroup}><Text style={styles.filterLabel}>Horário de retirada</Text><View style={styles.filterChips}>{timeOptions.map((option) => <Pressable key={option.label} onPress={() => setSelectedTime((current) => current === option.value ? null : option.value)} style={({ pressed }) => [styles.filterChip, selectedTime === option.value && styles.filterChipActive, pressed && styles.pressed]} accessibilityRole="button"><Text style={[styles.filterChipText, selectedTime === option.value && styles.filterChipTextActive]}>{option.label}</Text></Pressable>)}</View></View>
-              {locationMessage ? <Text style={styles.locationHint}>{locationMessage}</Text> : selectedDistance ? <Text style={styles.locationHint}>Distâncias calculadas usando sua localização atual.</Text> : null}
-              {hasActiveFilters ? <Pressable onPress={clearFilters} accessibilityRole="button" style={({ pressed }) => [styles.clearFilters, pressed && styles.pressed]}><Text style={styles.clearFiltersText}>Limpar filtros</Text></Pressable> : null}
-            </View> : null}
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             <MaterialIcons name={error ? "cloud-off" : "shopping-bag"} size={27} color="#5E7D00" />
-            <Text style={styles.emptyTitle}>{error ? "Não foi possível atualizar" : isLoading ? "Carregando sacolas" : hasActiveFilters ? "Nenhuma sacola encontrada" : "Ainda não há sacolas"}</Text>
-            <Text style={styles.emptyText}>{error ?? (hasActiveFilters ? "Tente ampliar a distância, mudar o horário ou limpar os filtros." : "Quando um parceiro publicar uma sacola, ela aparecerá aqui.")}</Text>
-            {error ? <Pressable onPress={() => void refresh()} style={styles.retry}><Text style={styles.retryText}>Tentar novamente</Text></Pressable> : hasActiveFilters ? <Pressable onPress={clearFilters} style={styles.retry}><Text style={styles.retryText}>Limpar filtros</Text></Pressable> : null}
+            <Text style={styles.emptyTitle}>{selectedCategory !== "Todas" ? "Nenhuma sacola nesta categoria" : error ? "Não foi possível atualizar" : isLoading ? "Carregando sacolas" : "Ainda não há sacolas"}</Text>
+            <Text style={styles.emptyText}>{selectedCategory !== "Todas" ? "Escolha outra categoria para ver mais opções." : error ?? "Quando um parceiro publicar uma sacola, ela aparecerá aqui."}</Text>
+            {error ? <Pressable onPress={() => void refresh()} style={styles.retry}><Text style={styles.retryText}>Tentar novamente</Text></Pressable> : null}
           </View>
         }
       />
@@ -172,41 +112,25 @@ const styles = StyleSheet.create({
   locationText: { color: "#4F574E", fontSize: 13, fontWeight: "700" },
   hero: { marginHorizontal: 20, marginTop: 17 },
   eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 },
-  heroTitle: { color: "#151B14", fontSize: 33, lineHeight: 38, letterSpacing: -1.6, fontWeight: "900", marginTop: 8 },
+  heroTitle: { color: "#151B14", fontSize: 28, lineHeight: 33, letterSpacing: -1.25, fontWeight: "900", marginTop: 7, maxWidth: 320 },
   heroCopy: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 9 },
-  impactCard: { marginHorizontal: 20, marginTop: 22, borderRadius: 22, padding: 16, backgroundColor: "#A5DF00", flexDirection: "row", alignItems: "center", gap: 12 },
-  cardPressed: { opacity: 0.88, transform: [{ scale: 0.99 }] },
-  impactIcon: { height: 39, width: 39, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.52)" },
-  impactTextBlock: { flex: 1 },
-  impactLabel: { color: "#405500", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
-  impactValue: { color: "#151B14", fontSize: 14, fontWeight: "900", marginTop: 3 },
-  impactCopy: { color: "#425500", fontSize: 11, fontWeight: "700", marginTop: 2 },
-  flowCard: { marginHorizontal: 20, marginTop: 11, padding: 15, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", flexDirection: "row", alignItems: "center", gap: 12 },
-  flowCopy: { flex: 1 }, flowTitle: { color: "#151B14", fontSize: 13, fontWeight: "900" }, flowText: { color: "#697065", fontSize: 11, lineHeight: 15, marginTop: 3 },
-  flowSteps: { flexDirection: "row", alignItems: "center", gap: 4, paddingLeft: 2 }, flowStep: { width: 20, height: 20, borderRadius: 10, backgroundColor: "#ECF6CD", color: "#425500", fontSize: 10, fontWeight: "900", textAlign: "center", lineHeight: 20 },
+  impactCard: { marginHorizontal: 20, marginTop: 18, borderRadius: 16, paddingHorizontal: 13, paddingVertical: 10, backgroundColor: "#EDF8C8", flexDirection: "row", alignItems: "center", gap: 8 },
+  impactIcon: { height: 28, width: 28, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#A5DF00" },
+  impactValue: { color: "#253000", fontSize: 12, fontWeight: "900", flex: 1 },
+  impactCopy: { color: "#5A6D1C", fontSize: 11, fontWeight: "700" },
   sectionHeader: { marginHorizontal: 20, marginTop: 27, marginBottom: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.65 },
   sectionSubtitle: { color: "#697065", fontSize: 12, marginTop: 3 },
   countText: { color: "#5E7D00", fontSize: 12, fontWeight: "800", maxWidth: 86, textAlign: "right" },
-  mapLink: { color: "#5E7D00", fontSize: 12, fontWeight: "900" },
   categories: { paddingLeft: 20, paddingRight: 12, gap: 10 },
-  categoryItem: { alignItems: "center", width: 72, gap: 7 },
-  categoryIcon: { width: 57, height: 57, borderRadius: 19, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" },
+  categoryItem: { alignItems: "center", width: 72, gap: 7, paddingBottom: 3 },
+  categoryItemActive: { opacity: 1 },
+  categoryIcon: { width: 54, height: 54, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" },
   categoryIconActive: { backgroundColor: "#A5DF00", borderColor: "#A5DF00" },
   categoryText: { color: "#4F574E", fontSize: 11, fontWeight: "700" },
-  categoryTextActive: { color: "#405500", fontWeight: "900" },
-  filterToggle: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 5, paddingLeft: 8 },
-  filtersPanel: { marginHorizontal: 20, marginTop: -4, marginBottom: 4, borderRadius: 19, padding: 14, backgroundColor: "#F4F8E8", borderWidth: 1, borderColor: "#E2E8DB" },
-  filterGroup: { gap: 8 },
-  filterLabel: { color: "#405500", fontSize: 10, fontWeight: "900", letterSpacing: 0.6 },
-  filterChips: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  filterChip: { minHeight: 34, paddingHorizontal: 12, justifyContent: "center", borderRadius: 13, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#DCE5D5" },
-  filterChipActive: { backgroundColor: "#A5DF00", borderColor: "#A5DF00" },
-  filterChipText: { color: "#4F574E", fontSize: 11, fontWeight: "800" },
-  filterChipTextActive: { color: "#223000", fontWeight: "900" },
-  locationHint: { color: "#52604B", fontSize: 10, lineHeight: 14, marginTop: 11, fontWeight: "600" },
-  clearFilters: { alignSelf: "flex-start", marginTop: 10, minHeight: 31, justifyContent: "center" },
-  clearFiltersText: { color: "#527100", fontSize: 11, fontWeight: "900" },
+  categoryTextActive: { color: "#151B14", fontWeight: "900" },
+  referenceNotice: { marginHorizontal: 20, marginTop: 20, padding: 12, gap: 8, borderRadius: 15, backgroundColor: "#F4F8E8", borderWidth: 1, borderColor: "#DFECC4", flexDirection: "row", alignItems: "flex-start" },
+  referenceText: { flex: 1, color: "#4E5D21", fontSize: 11, lineHeight: 16, fontWeight: "600" },
   empty: { alignItems: "center", paddingHorizontal: 42, paddingVertical: 34, gap: 8 },
   emptyTitle: { color: "#151B14", fontSize: 16, fontWeight: "900", marginTop: 4 },
   emptyText: { color: "#697065", fontSize: 12, lineHeight: 18, textAlign: "center" },

@@ -30,9 +30,9 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Descobrir", tabBarIcon: ({ color }) => <IconSymbol size={23} name="house.fill" color={color} /> }} />
-      <Tabs.Screen name="explore" options={{ title: "Mapa", tabBarIcon: ({ color }) => <IconSymbol size={23} name="map.fill" color={color} /> }} />
-      <Tabs.Screen name="bag" options={{ title: "Minhas sacolas", tabBarIcon: ({ color }) => <IconSymbol size={23} name="bag.fill" color={color} /> }} />
-      <Tabs.Screen name="impact" options={{ href: null }} />
+      <Tabs.Screen name="explore" options={{ title: "Explorar", tabBarIcon: ({ color }) => <IconSymbol size={23} name="map.fill" color={color} /> }} />
+      <Tabs.Screen name="bag" options={{ title: "Sacola", tabBarIcon: ({ color }) => <IconSymbol size={23} name="bag.fill" color={color} /> }} />
+      <Tabs.Screen name="impact" options={{ title: "Impacto", tabBarIcon: ({ color }) => <IconSymbol size={23} name="leaf.fill" color={color} /> }} />
       <Tabs.Screen name="profile" options={{ title: "Perfil", tabBarIcon: ({ color }) => <IconSymbol size={23} name="person.fill" color={color} /> }} />
     </Tabs>
   );

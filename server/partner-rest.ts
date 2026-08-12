@@ -57,8 +57,6 @@ function toPartnerJson(partner: Partner) {
     businessName: partner.businessName,
     category: partner.category,
     address: partner.address,
-    latitude: partner.latitude,
-    longitude: partner.longitude,
     phone: partner.phone,
     email: partner.email,
     status: partner.status,
@@ -149,12 +147,11 @@ export function registerPartnerRoutes(app: Router) {
         passwordHash,
         cnpjStatus: cnpj.status,
         cnpjVerifiedAt: new Date(),
-        status: "pending",
+        status: "approved",
       });
 
       res.status(201).json({
-        message: "Conta criada e CNPJ validado. Seu cadastro foi enviado para aprovação manual antes da publicação de sacolas.",
-        status: "pending",
+        message: "Conta criada e CNPJ validado. Você já pode cadastrar sacolas.",
         cnpj: { legalName: cnpj.legalName, tradeName: cnpj.tradeName, status: cnpj.status },
       });
     } catch (error) {
@@ -175,12 +172,7 @@ export function registerPartnerRoutes(app: Router) {
         return;
       }
       if (partner[0].status !== "approved") {
-        const message = partner[0].status === "pending"
-          ? "Seu cadastro está em análise. Você receberá acesso após a aprovação manual."
-          : partner[0].status === "rejected"
-            ? "Seu cadastro não foi aprovado. Entre em contato com o suporte CapiLoop."
-            : "Sua conta está temporariamente suspensa.";
-        res.status(403).json({ message, status: partner[0].status });
+        res.status(403).json({ message: "A conta deste parceiro não está habilitada para operar." });
         return;
       }
 

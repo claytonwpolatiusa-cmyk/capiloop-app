@@ -19,8 +19,7 @@ export type Offer = {
   co2Kg: number;
   latitude?: number;
   longitude?: number;
-  pickupStartTime?: string;
-  pickupEndTime?: string;
+  source?: "live" | "reference";
 };
 
 export const categories: { label: OfferCategory; icon: string }[] = [

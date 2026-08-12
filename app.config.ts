@@ -88,12 +88,6 @@ const config: ExpoConfig = {
       },
     ],
     [
-      "expo-location",
-      {
-        locationWhenInUsePermission: "Permita que o CapiLoop use sua localização para mostrar sacolas próximas.",
-      },
-    ],
-    [
       "expo-audio",
       {
         microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",
