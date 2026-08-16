@@ -90,6 +90,9 @@ export default function DiscoverScreen() {
                 <Pressable onPress={() => setSortBy("pickup")} accessibilityRole="button" accessibilityState={{ selected: sortBy === "pickup" }} style={({ pressed }) => [styles.sortOption, sortBy === "pickup" && styles.sortOptionActive, pressed && styles.pressed]}>
                   <MaterialIcons name="schedule" size={14} color={sortBy === "pickup" ? "#253000" : "#697065"} /><Text style={[styles.sortOptionText, sortBy === "pickup" && styles.sortOptionTextActive]}>Horário</Text>
                 </Pressable>
+                <Pressable onPress={() => setSortBy("price")} accessibilityRole="button" accessibilityState={{ selected: sortBy === "price" }} style={({ pressed }) => [styles.sortOption, sortBy === "price" && styles.sortOptionActive, pressed && styles.pressed]}>
+                  <MaterialIcons name="sell" size={14} color={sortBy === "price" ? "#253000" : "#697065"} /><Text style={[styles.sortOptionText, sortBy === "price" && styles.sortOptionTextActive]}>Preço</Text>
+                </Pressable>
               </View>
             </View>
             {isReferenceCatalog ? <View style={styles.referenceNotice}><MaterialIcons name="auto-awesome" size={16} color="#4A6410" /><Text style={styles.referenceText}>Novas sacolas reais aparecerão aqui assim que parceiros publicarem.</Text></View> : null}

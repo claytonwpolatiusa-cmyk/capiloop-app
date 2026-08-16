@@ -90,3 +90,5 @@
 - [x] Implementar ordenação das sacolas pelo próximo horário de retirada.
 - [x] Adicionar controles acessíveis de ordenação à aba inicial.
 - [x] Validar a combinação entre categorias e critérios de ordenação.
+- [x] Implementar ordenação das sacolas por menor preço.
+- [x] Expor a opção de preço nos controles e validar a ordenação combinada com categorias.

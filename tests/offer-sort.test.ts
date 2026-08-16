@@ -4,9 +4,9 @@ import { distanceInKm, pickupStartInMinutes, sortOffers } from "../lib/offer-sor
 import type { Offer } from "../lib/capiloop-data";
 
 const offersForSort: Offer[] = [
-  { id: "late", store: "Zeta", subtitle: "", category: "Café", price: 1, originalPrice: 2, distance: "1,4 km", pickupWindow: "19h–20h", address: "", stockLabel: "", expected: "", image: 0 as never, accent: "", co2Kg: 0 },
-  { id: "near", store: "Beta", subtitle: "", category: "Padaria", price: 1, originalPrice: 2, distance: "0,8 km", pickupWindow: "18h–19h", address: "", stockLabel: "", expected: "", image: 0 as never, accent: "", co2Kg: 0 },
-  { id: "early", store: "Alfa", subtitle: "", category: "Mercado", price: 1, originalPrice: 2, distance: "1,1 km", pickupWindow: "17h30–18h30", address: "", stockLabel: "", expected: "", image: 0 as never, accent: "", co2Kg: 0 },
+  { id: "late", store: "Zeta", subtitle: "", category: "Café", price: 12, originalPrice: 24, distance: "1,4 km", pickupWindow: "19h–20h", address: "", stockLabel: "", expected: "", image: 0 as never, accent: "", co2Kg: 0 },
+  { id: "near", store: "Beta", subtitle: "", category: "Padaria", price: 15, originalPrice: 30, distance: "0,8 km", pickupWindow: "18h–19h", address: "", stockLabel: "", expected: "", image: 0 as never, accent: "", co2Kg: 0 },
+  { id: "early", store: "Alfa", subtitle: "", category: "Mercado", price: 10, originalPrice: 20, distance: "1,1 km", pickupWindow: "17h30–18h30", address: "", stockLabel: "", expected: "", image: 0 as never, accent: "", co2Kg: 0 },
 ];
 
 describe("ordenacao de ofertas", () => {
@@ -23,5 +23,6 @@ describe("ordenacao de ofertas", () => {
   it("ordena por distancia e por proximo horario", () => {
     expect(sortOffers(offersForSort, "distance").map((offer) => offer.id)).toEqual(["near", "early", "late"]);
     expect(sortOffers(offersForSort, "pickup").map((offer) => offer.id)).toEqual(["early", "near", "late"]);
+    expect(sortOffers(offersForSort, "price").map((offer) => offer.id)).toEqual(["early", "late", "near"]);
   });
 });

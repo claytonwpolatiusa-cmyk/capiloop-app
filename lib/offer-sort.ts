@@ -1,6 +1,6 @@
 import type { Offer } from "@/lib/capiloop-data";
 
-export type OfferSort = "distance" | "pickup";
+export type OfferSort = "distance" | "pickup" | "price";
 
 export function distanceInKm(distance: string): number {
   const match = distance.replace(",", ".").match(/(\d+(?:\.\d+)?)\s*km/i);
@@ -15,8 +15,8 @@ export function pickupStartInMinutes(window: string): number {
 
 export function sortOffers(offers: Offer[], sort: OfferSort): Offer[] {
   return [...offers].sort((first, second) => {
-    const firstValue = sort === "distance" ? distanceInKm(first.distance) : pickupStartInMinutes(first.pickupWindow);
-    const secondValue = sort === "distance" ? distanceInKm(second.distance) : pickupStartInMinutes(second.pickupWindow);
+    const firstValue = sort === "distance" ? distanceInKm(first.distance) : sort === "pickup" ? pickupStartInMinutes(first.pickupWindow) : first.price;
+    const secondValue = sort === "distance" ? distanceInKm(second.distance) : sort === "pickup" ? pickupStartInMinutes(second.pickupWindow) : second.price;
     return firstValue - secondValue || first.store.localeCompare(second.store, "pt-BR");
   });
 }
