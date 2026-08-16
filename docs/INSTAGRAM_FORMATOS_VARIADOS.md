@@ -86,3 +86,7 @@ Em um ciclo de oito conteúdos, a distribuição recomendada é de **dois reels 
 ## Critérios de aprovação
 
 Uma peça está pronta para publicação quando o alimento parece real e desejável, a cena parece possível em um bairro brasileiro, o Verde Loop funciona como assinatura e não como ruído, e o conteúdo comunica descoberta sem depender de um bloco de texto. Qualquer CTA deve vir da legenda ou de uma tela final breve.
+
+## Peça visual disponível nesta rodada
+
+**Post fotográfico — “O loop começa perto”.** A foto vertical de lifestyle foi validada em formato de feed `4:5`, preservando a cena completa sem corte: retirada em uma padaria de bairro, sacola verde-lima, alimento visível e uma assinatura de capivara discreta. Ela atende ao critério de post fotográfico sem texto central e está apta para publicação com a legenda voltada à descoberta local.

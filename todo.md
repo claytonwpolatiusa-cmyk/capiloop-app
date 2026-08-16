@@ -144,3 +144,5 @@
 - [ ] Criar posts fotográficos e de bastidores que não dependam de texto como elemento central.
 - [ ] Gerar e organizar o primeiro lote de ativos variados para aprovação.
 - [x] Publicar o reel realista disponível enquanto o restante do lote aguarda nova cota de geração.
+- [ ] Gerar e publicar uma nova rodada imediata de reels, carrosséis e bastidores variados.
+- [x] Criar kit de prompts e roteiros detalhados para vídeos fotorrealistas da CapiLoop em outras IAs.
