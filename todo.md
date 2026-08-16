@@ -135,3 +135,12 @@
 - [x] Submeter o story à confirmação antes de publicá-lo no Instagram.
 - [ ] Configurar o agendamento programado dos cinco posts no calendário editorial.
 - [x] Publicar imediatamente os cinco posts aprovados, com confirmação individual no Instagram.
+
+## Conteúdo variado para Instagram
+
+- [x] Definir uma matriz de formatos que mantenha o branding CapiLoop sem repetir a estética.
+- [x] Criar roteiros de reels realistas com comida, pessoas e contexto local.
+- [x] Criar carrosséis narrativos e educativos com imagens predominantes.
+- [ ] Criar posts fotográficos e de bastidores que não dependam de texto como elemento central.
+- [ ] Gerar e organizar o primeiro lote de ativos variados para aprovação.
+- [x] Publicar o reel realista disponível enquanto o restante do lote aguarda nova cota de geração.
