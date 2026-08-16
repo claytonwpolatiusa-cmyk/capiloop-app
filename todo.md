@@ -112,3 +112,16 @@
 - [x] Criar brand book completo com posicionamento, arquétipos, voz, mensagens e diretrizes visuais.
 - [x] Consolidar objetivos, entregas realizadas e pendências do CapiLoop.
 - [x] Criar três posts iniciais minimalistas para Instagram com legendas e instruções de publicação.
+
+## Migração do Instagram
+
+- [x] Verificar a conexão e o estado atual do perfil do Instagram.
+- [x] Preparar nome, @, bio, logo e conteúdo inaugural da CapiLoop.
+- [x] Confirmar alterações de perfil, arquivamento dos posts existentes e publicação inicial.
+- [ ] Aplicar a nova identidade e publicar o primeiro post da CapiLoop.
+
+## Revisão da publicação inaugural
+
+- [x] Criar nova arte de lançamento com maior nitidez, contraste e tipografia marcante.
+- [x] Preparar nova legenda de alto impacto para a primeira publicação.
+- [x] Submeter a nova publicação à confirmação antes do envio ao Instagram.
