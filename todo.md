@@ -105,3 +105,10 @@
 - [x] Implementar avaliação de 0 a 5, quantidade de sacolas vendidas e classificação padronizada.
 - [x] Criar dez tipos de destaques padronizados de experiência sem atribuí-los a pessoas específicas.
 - [x] Exibir reputação de forma transparente nos cards de oferta e validar estados sem dados suficientes.
+
+## Brand book e conteúdo de lançamento
+
+- [x] Inventariar logo, paleta, tipografia, componentes e estado do projeto.
+- [x] Criar brand book completo com posicionamento, arquétipos, voz, mensagens e diretrizes visuais.
+- [x] Consolidar objetivos, entregas realizadas e pendências do CapiLoop.
+- [x] Criar três posts iniciais minimalistas para Instagram com legendas e instruções de publicação.
