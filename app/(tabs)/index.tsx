@@ -9,14 +9,16 @@ import { ScreenContainer } from "@/components/screen-container";
 import { categories, type OfferCategory } from "@/lib/capiloop-data";
 import { useCapiLoop } from "@/lib/capiloop-store";
 import { useCatalog } from "@/lib/catalog";
+import { sortOffers, type OfferSort } from "@/lib/offer-sort";
 
 export default function DiscoverScreen() {
   const { impact } = useCapiLoop();
   const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
   const [selectedCategory, setSelectedCategory] = useState<OfferCategory | "Todas">("Todas");
+  const [sortBy, setSortBy] = useState<OfferSort>("distance");
   const displayedOffers = useMemo(
-    () => selectedCategory === "Todas" ? offers : offers.filter((offer) => offer.category === selectedCategory),
-    [offers, selectedCategory],
+    () => sortOffers(selectedCategory === "Todas" ? offers : offers.filter((offer) => offer.category === selectedCategory), sortBy),
+    [offers, selectedCategory, sortBy],
   );
 
   return (
@@ -79,6 +81,17 @@ export default function DiscoverScreen() {
               </View>
               <Text style={styles.countText}>{displayedOffers.length} {displayedOffers.length === 1 ? "sacola" : "sacolas"}</Text>
             </View>
+            <View style={styles.sortBar} accessibilityLabel="Ordenar sacolas">
+              <Text style={styles.sortLabel}>Ordenar por</Text>
+              <View style={styles.sortOptions}>
+                <Pressable onPress={() => setSortBy("distance")} accessibilityRole="button" accessibilityState={{ selected: sortBy === "distance" }} style={({ pressed }) => [styles.sortOption, sortBy === "distance" && styles.sortOptionActive, pressed && styles.pressed]}>
+                  <MaterialIcons name="near-me" size={14} color={sortBy === "distance" ? "#253000" : "#697065"} /><Text style={[styles.sortOptionText, sortBy === "distance" && styles.sortOptionTextActive]}>Distância</Text>
+                </Pressable>
+                <Pressable onPress={() => setSortBy("pickup")} accessibilityRole="button" accessibilityState={{ selected: sortBy === "pickup" }} style={({ pressed }) => [styles.sortOption, sortBy === "pickup" && styles.sortOptionActive, pressed && styles.pressed]}>
+                  <MaterialIcons name="schedule" size={14} color={sortBy === "pickup" ? "#253000" : "#697065"} /><Text style={[styles.sortOptionText, sortBy === "pickup" && styles.sortOptionTextActive]}>Horário</Text>
+                </Pressable>
+              </View>
+            </View>
             {isReferenceCatalog ? <View style={styles.referenceNotice}><MaterialIcons name="auto-awesome" size={16} color="#4A6410" /><Text style={styles.referenceText}>Novas sacolas reais aparecerão aqui assim que parceiros publicarem.</Text></View> : null}
           </View>
         }
@@ -118,6 +131,13 @@ const styles = StyleSheet.create({
   availableTitle: { color: "#151B14", fontSize: 21, fontWeight: "900", letterSpacing: -0.85 },
   sectionSubtitle: { color: "#697065", fontSize: 12, marginTop: 3 },
   countText: { color: "#4A6410", fontSize: 11, fontWeight: "900", borderRadius: 10, backgroundColor: "#EEF6D0", paddingHorizontal: 9, paddingVertical: 6, maxWidth: 88, textAlign: "right" },
+  sortBar: { marginHorizontal: 20, padding: 5, borderRadius: 14, backgroundColor: "#F2F4F0", flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sortLabel: { color: "#697065", fontSize: 11, fontWeight: "800", marginLeft: 8 },
+  sortOptions: { flexDirection: "row", gap: 4 },
+  sortOption: { minHeight: 34, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, borderRadius: 10 },
+  sortOptionActive: { backgroundColor: "#FFFFFF", shadowColor: "#1B2417", shadowOpacity: 0.08, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  sortOptionText: { color: "#697065", fontSize: 11, fontWeight: "800" },
+  sortOptionTextActive: { color: "#253000", fontWeight: "900" },
   categories: { paddingLeft: 20, paddingRight: 14, gap: 10 },
   categoryItem: { alignItems: "center", width: 70, gap: 7, paddingBottom: 3 },
   categoryItemActive: { opacity: 1 },

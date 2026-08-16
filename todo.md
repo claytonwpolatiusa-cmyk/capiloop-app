@@ -83,3 +83,10 @@
 - [x] Refinar a busca, os filtros e os atalhos para uso confortável com uma mão.
 - [x] Melhorar a apresentação de cards, estados e feedbacks da descoberta.
 - [x] Validar a navegação e a consistência visual do novo fluxo inicial.
+
+## Ordenação de ofertas
+
+- [x] Implementar ordenação das sacolas por menor distância.
+- [x] Implementar ordenação das sacolas pelo próximo horário de retirada.
+- [x] Adicionar controles acessíveis de ordenação à aba inicial.
+- [x] Validar a combinação entre categorias e critérios de ordenação.
