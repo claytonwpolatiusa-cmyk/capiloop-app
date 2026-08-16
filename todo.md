@@ -132,4 +132,4 @@
 - [x] Criar cinco artes de feed com linguagem visual consistente e conteúdos complementares.
 - [x] Criar legendas, CTAs e instruções de publicação para a sequência.
 - [x] Criar um story vertical para publicação imediata.
-- [ ] Submeter o story à confirmação antes de publicá-lo no Instagram.
+- [x] Submeter o story à confirmação antes de publicá-lo no Instagram.
