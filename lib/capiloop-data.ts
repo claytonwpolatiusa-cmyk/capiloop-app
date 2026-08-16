@@ -1,4 +1,6 @@
-import type { ImageSourcePropType } from "react-native";
+import { ImageSourcePropType } from "react-native";
+
+import type { EstablishmentReputation } from "@/lib/offer-reputation";
 
 export type OfferCategory = "Padaria" | "Café" | "Mercado" | "Restaurante";
 
@@ -20,6 +22,7 @@ export type Offer = {
   latitude?: number;
   longitude?: number;
   source?: "live" | "reference";
+  reputation?: EstablishmentReputation;
 };
 
 export const categories: { label: OfferCategory; icon: string }[] = [
@@ -47,6 +50,12 @@ export const offers: Offer[] = [
     co2Kg: 2.2,
     latitude: -25.4303,
     longitude: -49.2731,
+    reputation: {
+      soldBags: 184,
+      averageRating: 4.8,
+      verifiedRatings: 72,
+      highlights: ["flavor", "generous", "pickup"],
+    },
   },
   {
     id: "cafe-amarelo",
@@ -65,6 +74,12 @@ export const offers: Offer[] = [
     co2Kg: 2.6,
     latitude: -25.4254,
     longitude: -49.2794,
+    reputation: {
+      soldBags: 96,
+      averageRating: 4.7,
+      verifiedRatings: 38,
+      highlights: ["fresh", "flavor", "packaging"],
+    },
   },
   {
     id: "mercado-estacao",
@@ -83,6 +98,12 @@ export const offers: Offer[] = [
     co2Kg: 3.1,
     latitude: -25.4407,
     longitude: -49.266,
+    reputation: {
+      soldBags: 61,
+      averageRating: 4.6,
+      verifiedRatings: 21,
+      highlights: ["variety", "goodValue", "impact"],
+    },
   },
   {
     id: "doce-canto",
@@ -101,6 +122,12 @@ export const offers: Offer[] = [
     co2Kg: 2.8,
     latitude: -25.4367,
     longitude: -49.277,
+    reputation: {
+      soldBags: 28,
+      averageRating: 4.9,
+      verifiedRatings: 9,
+      highlights: ["flavor", "generous", "seasonal"],
+    },
   },
 ];
 

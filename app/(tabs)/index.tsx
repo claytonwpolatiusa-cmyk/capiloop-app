@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, useState } from "react";
 import { router } from "expo-router";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { OfferCard } from "@/components/offer-card";
@@ -9,6 +9,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { categories, type OfferCategory } from "@/lib/capiloop-data";
 import { useCapiLoop } from "@/lib/capiloop-store";
 import { useCatalog } from "@/lib/catalog";
+import { filterOffersByStore } from "@/lib/offer-search";
 import { sortOffers, type OfferSort } from "@/lib/offer-sort";
 
 export default function DiscoverScreen() {
@@ -16,9 +17,10 @@ export default function DiscoverScreen() {
   const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
   const [selectedCategory, setSelectedCategory] = useState<OfferCategory | "Todas">("Todas");
   const [sortBy, setSortBy] = useState<OfferSort>("distance");
+  const [storeQuery, setStoreQuery] = useState("");
   const displayedOffers = useMemo(
-    () => sortOffers(selectedCategory === "Todas" ? offers : offers.filter((offer) => offer.category === selectedCategory), sortBy),
-    [offers, selectedCategory, sortBy],
+    () => sortOffers(filterOffersByStore(selectedCategory === "Todas" ? offers : offers.filter((offer) => offer.category === selectedCategory), storeQuery), sortBy),
+    [offers, selectedCategory, sortBy, storeQuery],
   );
 
   return (
@@ -52,6 +54,24 @@ export default function DiscoverScreen() {
               <Pressable onPress={() => router.push("/(tabs)/explore")} style={({ pressed }) => [styles.mapButton, pressed && styles.pressed]}><MaterialIcons name="map" size={17} color="#151B14" /><Text style={styles.mapButtonText}>Ver no mapa</Text><MaterialIcons name="arrow-forward" size={16} color="#151B14" /></Pressable>
             </View>
 
+            <View style={styles.searchBox}>
+              <MaterialIcons name="search" size={20} color="#697065" />
+              <TextInput
+                accessibilityLabel="Buscar por nome do estabelecimento"
+                value={storeQuery}
+                onChangeText={setStoreQuery}
+                placeholder="Buscar estabelecimento"
+                placeholderTextColor="#8C9388"
+                returnKeyType="search"
+                style={styles.searchInput}
+              />
+              {storeQuery ? (
+                <Pressable onPress={() => setStoreQuery("")} accessibilityRole="button" accessibilityLabel="Limpar busca" style={({ pressed }) => [styles.clearSearch, pressed && styles.pressed]}>
+                  <MaterialIcons name="close" size={17} color="#4F574E" />
+                </Pressable>
+              ) : null}
+            </View>
+
             <View style={styles.discoveryHeader}>
               <View><Text style={styles.sectionTitle}>Escolha o que combina hoje</Text><Text style={styles.sectionSubtitle}>Toque em uma categoria para filtrar.</Text></View>
             </View>
@@ -76,8 +96,8 @@ export default function DiscoverScreen() {
 
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.availableTitle}>{selectedCategory === "Todas" ? "Disponíveis agora" : selectedCategory}</Text>
-                <Text style={styles.sectionSubtitle}>{isReferenceCatalog ? "Sacolas de exemplo para conhecer o CapiLoop." : "Reserve antes que acabem."}</Text>
+                <Text style={styles.availableTitle}>{storeQuery ? `Resultados por estabelecimento` : selectedCategory === "Todas" ? "Disponíveis agora" : selectedCategory}</Text>
+                <Text style={styles.sectionSubtitle}>{storeQuery ? `Buscando por “${storeQuery}”` : isReferenceCatalog ? "Sacolas de exemplo para conhecer o CapiLoop." : "Reserve antes que acabem."}</Text>
               </View>
               <Text style={styles.countText}>{displayedOffers.length} {displayedOffers.length === 1 ? "sacola" : "sacolas"}</Text>
             </View>
@@ -101,8 +121,9 @@ export default function DiscoverScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <MaterialIcons name={error ? "cloud-off" : "shopping-bag"} size={27} color="#5E7D00" />
-            <Text style={styles.emptyTitle}>{selectedCategory !== "Todas" ? "Nenhuma sacola nesta categoria" : error ? "Não foi possível atualizar" : isLoading ? "Carregando sacolas" : "Ainda não há sacolas"}</Text>
-            <Text style={styles.emptyText}>{selectedCategory !== "Todas" ? "Escolha outra categoria para ver mais opções." : error ?? "Quando um parceiro publicar uma sacola, ela aparecerá aqui."}</Text>
+            <Text style={styles.emptyTitle}>{storeQuery ? "Nenhum estabelecimento encontrado" : selectedCategory !== "Todas" ? "Nenhuma sacola nesta categoria" : error ? "Não foi possível atualizar" : isLoading ? "Carregando sacolas" : "Ainda não há sacolas"}</Text>
+            <Text style={styles.emptyText}>{storeQuery ? "Tente buscar por outro nome ou limpe a busca para ver todas as sacolas." : selectedCategory !== "Todas" ? "Escolha outra categoria para ver mais opções." : error ?? "Quando um parceiro publicar uma sacola, ela aparecerá aqui."}</Text>
+            {storeQuery ? <Pressable onPress={() => setStoreQuery("")} style={styles.retry}><Text style={styles.retryText}>Limpar busca</Text></Pressable> : null}
             {error ? <Pressable onPress={() => void refresh()} style={styles.retry}><Text style={styles.retryText}>Tentar novamente</Text></Pressable> : null}
           </View>
         }
@@ -128,6 +149,9 @@ const styles = StyleSheet.create({
   heroCopy: { color: "#D6DBD1", fontSize: 13, lineHeight: 19, marginTop: 8, maxWidth: 245 },
   mapButton: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#B8E231", marginTop: 19 },
   mapButtonText: { color: "#151B14", fontSize: 12, fontWeight: "900" },
+  searchBox: { minHeight: 52, marginHorizontal: 20, marginTop: 14, paddingHorizontal: 14, borderRadius: 16, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", flexDirection: "row", alignItems: "center", gap: 10 },
+  searchInput: { flex: 1, minHeight: 48, color: "#151B14", fontSize: 14, fontWeight: "700", paddingVertical: 0 },
+  clearSearch: { height: 30, width: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#F2F4F0" },
   discoveryHeader: { marginHorizontal: 20, marginTop: 27, marginBottom: 13 },
   sectionHeader: { marginHorizontal: 20, marginTop: 26, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", letterSpacing: -0.6 },

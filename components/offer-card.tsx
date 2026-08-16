@@ -4,10 +4,13 @@ import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatCurrency, type Offer } from "@/lib/capiloop-data";
+import { getVisibleReputation, REPUTATION_HIGHLIGHTS } from "@/lib/offer-reputation";
 
 export function OfferCard({ offer, variant = "large" }: { offer: Offer; variant?: "large" | "compact" }) {
   const compact = variant === "compact";
   const savings = Math.round((1 - offer.price / offer.originalPrice) * 100);
+  const reputation = getVisibleReputation(offer.reputation);
+  const filledStars = reputation?.averageRating === null ? 0 : Math.round(reputation?.averageRating ?? 0);
 
   const openOffer = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
@@ -37,6 +40,38 @@ export function OfferCard({ offer, variant = "large" }: { offer: Offer; variant?
           <Text style={styles.originalPrice}>{formatCurrency(offer.originalPrice)}</Text>
           <Text style={styles.savings}>{savings}% off</Text>
         </View>
+        {reputation ? (
+          <View style={styles.reputationBlock}>
+            <View style={styles.reputationTopline}>
+              {reputation.isEstablished ? (
+                <View style={styles.ratingRow} accessibilityLabel={`Avaliação ${reputation.averageRating?.toFixed(1)} de 5 estrelas`}>
+                  <View style={styles.stars}>
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <MaterialIcons key={index} name="star" size={13} color={index < filledStars ? "#D58A00" : "#DDE1D9"} />
+                    ))}
+                  </View>
+                  <Text style={styles.ratingValue}>{reputation.averageRating?.toFixed(1)}</Text>
+                </View>
+              ) : (
+                <Text style={styles.collectingText}>Reputação em formação</Text>
+              )}
+              <View style={styles.soldRow}>
+                <MaterialIcons name="shopping-bag" size={12} color="#697065" />
+                <Text style={styles.soldText}>{reputation.soldBags} sacolas vendidas</Text>
+              </View>
+            </View>
+            {reputation.isEstablished && !compact ? (
+              <View style={styles.highlightsList}>
+                {reputation.highlights.slice(0, 2).map((highlight) => (
+                  <View key={highlight} style={styles.highlightItem}>
+                    <View style={styles.highlightBullet} />
+                    <Text numberOfLines={1} style={styles.highlightText}>{REPUTATION_HIGHLIGHTS[highlight]}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -48,7 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginHorizontal: 20,
     marginBottom: 14,
-    minHeight: 138,
+    minHeight: 166,
     overflow: "hidden",
     shadowColor: "#182314",
     shadowOpacity: 0.09,
@@ -57,7 +92,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     flexDirection: "row",
   },
-  cardCompact: { marginHorizontal: 0, marginBottom: 12, minHeight: 112 },
+  cardCompact: { marginHorizontal: 0, marginBottom: 12, minHeight: 128 },
   pressed: { opacity: 0.77, transform: [{ scale: 0.987 }] },
   image: { width: 124, height: "100%", backgroundColor: "#EEF0EB" },
   imageCompact: { width: 104 },
@@ -75,4 +110,16 @@ const styles = StyleSheet.create({
   price: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.7 },
   originalPrice: { color: "#8C9388", fontSize: 11, textDecorationLine: "line-through" },
   savings: { color: "#5E7D00", fontSize: 11, fontWeight: "800" },
+  reputationBlock: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E9ECE5", marginTop: 8, paddingTop: 7, gap: 5 },
+  reputationTopline: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 7 },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  stars: { flexDirection: "row" },
+  ratingValue: { color: "#895A00", fontSize: 12, fontWeight: "900" },
+  soldRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  soldText: { color: "#697065", fontSize: 10, fontWeight: "700" },
+  collectingText: { color: "#8C9388", fontSize: 10, fontWeight: "700" },
+  highlightsList: { gap: 3 },
+  highlightItem: { alignItems: "center", flexDirection: "row", gap: 5 },
+  highlightBullet: { backgroundColor: "#A5DF00", borderRadius: 3, height: 5, width: 5 },
+  highlightText: { color: "#586052", fontSize: 10, fontWeight: "600", flex: 1 },
 });

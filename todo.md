@@ -92,3 +92,16 @@
 - [x] Validar a combinação entre categorias e critérios de ordenação.
 - [x] Implementar ordenação das sacolas por menor preço.
 - [x] Expor a opção de preço nos controles e validar a ordenação combinada com categorias.
+
+## Busca de estabelecimentos
+
+- [x] Implementar busca de sacolas pelo nome do estabelecimento.
+- [x] Adicionar campo de busca acessível na descoberta.
+- [x] Validar a combinação entre busca, categorias e ordenação.
+
+## Reputação de estabelecimentos
+
+- [x] Definir limiar mínimo de vendas e dados necessários para mostrar estrelas e nota.
+- [x] Implementar avaliação de 0 a 5, quantidade de sacolas vendidas e classificação padronizada.
+- [x] Criar dez tipos de destaques padronizados de experiência sem atribuí-los a pessoas específicas.
+- [x] Exibir reputação de forma transparente nos cards de oferta e validar estados sem dados suficientes.
