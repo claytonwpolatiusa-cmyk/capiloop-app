@@ -117,3 +117,15 @@ As artes centrais “Mais sabor. Menos gasto.” e “Desperdício? Fora do noss
 [1] [Hootsuite — *The best time to post on Instagram (2026 data)*](https://blog.hootsuite.com/best-time-to-post-on-instagram/)
 
 [2] [Sprout Social — *Best Times to Post on Instagram in 2026*](https://sproutsocial.com/insights/best-times-to-post-on-instagram/)
+
+## Publicação imediata — status
+
+Por solicitação do usuário, a sequência deixou de seguir o calendário diário e passou a ser publicada imediatamente. Até este registro, as duas primeiras artes de feed foram publicadas:
+
+| Post | Tema | Link |
+|---|---|---|
+| 1 | Uma sacola. Muitas surpresas. | [Abrir publicação](https://www.instagram.com/p/DcHpYXLkUQm/) |
+| 2 | Comida boa tem segundo ato. | [Abrir publicação](https://www.instagram.com/p/DcHpcYckZ29/) |
+| 3 | Mais sabor. Menos gasto. | [Abrir publicação](https://www.instagram.com/p/DcHpmfjESxZ/) |
+| 4 | Desperdício? Fora do nosso cardápio. | [Abrir publicação](https://www.instagram.com/p/DcHppAqEaT0/) |
+| 5 | Qual lugar você quer ver aqui? | [Abrir publicação](https://www.instagram.com/p/DcHqaIlEfEh/) |

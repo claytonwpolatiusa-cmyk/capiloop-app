@@ -133,3 +133,5 @@
 - [x] Criar legendas, CTAs e instruções de publicação para a sequência.
 - [x] Criar um story vertical para publicação imediata.
 - [x] Submeter o story à confirmação antes de publicá-lo no Instagram.
+- [ ] Configurar o agendamento programado dos cinco posts no calendário editorial.
+- [x] Publicar imediatamente os cinco posts aprovados, com confirmação individual no Instagram.
