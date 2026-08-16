@@ -76,3 +76,10 @@
 - [x] Exibir claramente a janela de retirada, o valor e as condições da reserva.
 - [x] Permitir a escolha entre PIX, Apple Pay e cartão cadastrado antes do checkout.
 - [x] Conectar a escolha ao checkout e validar os estados de confirmação, cancelamento e erro.
+
+## Redesenho da descoberta
+
+- [x] Simplificar a hierarquia visual da aba inicial e priorizar as sacolas disponíveis.
+- [x] Refinar a busca, os filtros e os atalhos para uso confortável com uma mão.
+- [x] Melhorar a apresentação de cards, estados e feedbacks da descoberta.
+- [x] Validar a navegação e a consistência visual do novo fluxo inicial.

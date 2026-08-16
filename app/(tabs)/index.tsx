@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, useState } from "react";
+import { router } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
@@ -36,25 +37,22 @@ export default function DiscoverScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.locationRow}>
-              <MaterialIcons name="location-on" size={16} color="#5E7D00" />
-              <Text style={styles.locationText}>Centro, Curitiba</Text>
-              <MaterialIcons name="keyboard-arrow-down" size={18} color="#697065" />
-            </View>
+            <Pressable onPress={() => router.push("/(tabs)/explore")} style={({ pressed }) => [styles.locationRow, pressed && styles.pressed]} accessibilityLabel="Abrir mapa de ofertas">
+              <View style={styles.locationIcon}><MaterialIcons name="location-on" size={15} color="#4A6410" /></View>
+              <View><Text style={styles.locationLabel}>SACOLAS PERTO DE VOCÊ</Text><Text style={styles.locationText}>Centro, Curitiba</Text></View>
+              <MaterialIcons name="keyboard-arrow-right" size={21} color="#697065" />
+            </Pressable>
 
             <View style={styles.hero}>
-              <Text style={styles.eyebrow}>SACOLAS PERTO DE VOCÊ</Text>
-              <Text style={styles.heroTitle}>Resgate uma boa surpresa hoje.</Text>
-              <Text style={styles.heroCopy}>Escolha uma categoria e encontre a próxima retirada disponível.</Text>
+              <View style={styles.heroAccent}><Text style={styles.heroAccentText}>HOJE</Text></View>
+              <Text style={styles.heroTitle}>Sua próxima surpresa{`\n`}está por perto.</Text>
+              <Text style={styles.heroCopy}>Reserve em poucos toques e retire no horário indicado.</Text>
+              <Pressable onPress={() => router.push("/(tabs)/explore")} style={({ pressed }) => [styles.mapButton, pressed && styles.pressed]}><MaterialIcons name="map" size={17} color="#151B14" /><Text style={styles.mapButtonText}>Ver no mapa</Text><MaterialIcons name="arrow-forward" size={16} color="#151B14" /></Pressable>
             </View>
 
-            <View style={styles.impactCard}>
-              <View style={styles.impactIcon}><MaterialIcons name="eco" size={19} color="#151B14" /></View>
-              <Text style={styles.impactValue}>{impact.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂ evitados</Text>
-              <Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas</Text>
+            <View style={styles.discoveryHeader}>
+              <View><Text style={styles.sectionTitle}>Escolha o que combina hoje</Text><Text style={styles.sectionSubtitle}>Toque em uma categoria para filtrar.</Text></View>
             </View>
-
-            <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Encontre sua sacola</Text></View>
             <FlatList
               horizontal
               data={[{ label: "Todas", icon: "apps" }, ...categories]}
@@ -74,20 +72,14 @@ export default function DiscoverScreen() {
               )}
             />
 
-            {isReferenceCatalog ? (
-              <View style={styles.referenceNotice}>
-                <MaterialIcons name="info-outline" size={17} color="#5E7D00" />
-                <Text style={styles.referenceText}>Veja exemplos de sacolas locais enquanto novos parceiros publicam as próximas retiradas.</Text>
-              </View>
-            ) : null}
-
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>{selectedCategory === "Todas" ? "Sacolas disponíveis" : selectedCategory}</Text>
-                <Text style={styles.sectionSubtitle}>{isReferenceCatalog ? "Inspire-se e volte para ver novas publicações." : "Reserve agora e retire no horário indicado."}</Text>
+                <Text style={styles.availableTitle}>{selectedCategory === "Todas" ? "Disponíveis agora" : selectedCategory}</Text>
+                <Text style={styles.sectionSubtitle}>{isReferenceCatalog ? "Sacolas de exemplo para conhecer o CapiLoop." : "Reserve antes que acabem."}</Text>
               </View>
               <Text style={styles.countText}>{displayedOffers.length} {displayedOffers.length === 1 ? "sacola" : "sacolas"}</Text>
             </View>
+            {isReferenceCatalog ? <View style={styles.referenceNotice}><MaterialIcons name="auto-awesome" size={16} color="#4A6410" /><Text style={styles.referenceText}>Novas sacolas reais aparecerão aqui assim que parceiros publicarem.</Text></View> : null}
           </View>
         }
         ListEmptyComponent={
@@ -98,6 +90,7 @@ export default function DiscoverScreen() {
             {error ? <Pressable onPress={() => void refresh()} style={styles.retry}><Text style={styles.retryText}>Tentar novamente</Text></Pressable> : null}
           </View>
         }
+        ListFooterComponent={displayedOffers.length > 0 ? <View style={styles.impactCard}><View style={styles.impactIcon}><MaterialIcons name="eco" size={18} color="#253000" /></View><View style={styles.impactText}><Text style={styles.impactValue}>Seu impacto até agora</Text><Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas · {impact.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂ evitados</Text></View><MaterialIcons name="arrow-forward" size={18} color="#5E7D00" /></View> : null}
       />
     </ScreenContainer>
   );
@@ -105,32 +98,40 @@ export default function DiscoverScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 24, flexGrow: 1 },
-  topbar: { marginHorizontal: 20, marginTop: 6, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  iconButton: { height: 40, width: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" },
+  topbar: { marginHorizontal: 20, marginTop: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  iconButton: { height: 42, width: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" },
   pressed: { opacity: 0.6 },
-  locationRow: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", marginLeft: 20, marginTop: 20, gap: 3 },
-  locationText: { color: "#4F574E", fontSize: 13, fontWeight: "700" },
-  hero: { marginHorizontal: 20, marginTop: 17 },
-  eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 },
-  heroTitle: { color: "#151B14", fontSize: 28, lineHeight: 33, letterSpacing: -1.25, fontWeight: "900", marginTop: 7, maxWidth: 320 },
-  heroCopy: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 9 },
-  impactCard: { marginHorizontal: 20, marginTop: 18, borderRadius: 16, paddingHorizontal: 13, paddingVertical: 10, backgroundColor: "#EDF8C8", flexDirection: "row", alignItems: "center", gap: 8 },
-  impactIcon: { height: 28, width: 28, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#A5DF00" },
-  impactValue: { color: "#253000", fontSize: 12, fontWeight: "900", flex: 1 },
-  impactCopy: { color: "#5A6D1C", fontSize: 11, fontWeight: "700" },
-  sectionHeader: { marginHorizontal: 20, marginTop: 27, marginBottom: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.65 },
+  locationRow: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginTop: 22, gap: 9 },
+  locationIcon: { height: 30, width: 30, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: "#EEF6D0" },
+  locationLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
+  locationText: { color: "#4F574E", fontSize: 13, fontWeight: "800", marginTop: 1, flex: 1 },
+  hero: { marginHorizontal: 20, marginTop: 15, borderRadius: 28, padding: 22, backgroundColor: "#1B2417", overflow: "hidden" },
+  heroAccent: { alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#B8E231" },
+  heroAccentText: { color: "#273313", fontSize: 9, fontWeight: "900", letterSpacing: 0.8 },
+  heroTitle: { color: "#FFFFFF", fontSize: 29, lineHeight: 34, letterSpacing: -1.35, fontWeight: "900", marginTop: 13 },
+  heroCopy: { color: "#D6DBD1", fontSize: 13, lineHeight: 19, marginTop: 8, maxWidth: 245 },
+  mapButton: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#B8E231", marginTop: 19 },
+  mapButtonText: { color: "#151B14", fontSize: 12, fontWeight: "900" },
+  discoveryHeader: { marginHorizontal: 20, marginTop: 27, marginBottom: 13 },
+  sectionHeader: { marginHorizontal: 20, marginTop: 26, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", letterSpacing: -0.6 },
+  availableTitle: { color: "#151B14", fontSize: 21, fontWeight: "900", letterSpacing: -0.85 },
   sectionSubtitle: { color: "#697065", fontSize: 12, marginTop: 3 },
-  countText: { color: "#5E7D00", fontSize: 12, fontWeight: "800", maxWidth: 86, textAlign: "right" },
-  categories: { paddingLeft: 20, paddingRight: 12, gap: 10 },
-  categoryItem: { alignItems: "center", width: 72, gap: 7, paddingBottom: 3 },
+  countText: { color: "#4A6410", fontSize: 11, fontWeight: "900", borderRadius: 10, backgroundColor: "#EEF6D0", paddingHorizontal: 9, paddingVertical: 6, maxWidth: 88, textAlign: "right" },
+  categories: { paddingLeft: 20, paddingRight: 14, gap: 10 },
+  categoryItem: { alignItems: "center", width: 70, gap: 7, paddingBottom: 3 },
   categoryItemActive: { opacity: 1 },
-  categoryIcon: { width: 54, height: 54, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" },
-  categoryIconActive: { backgroundColor: "#A5DF00", borderColor: "#A5DF00" },
+  categoryIcon: { width: 53, height: 53, borderRadius: 17, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" },
+  categoryIconActive: { backgroundColor: "#B8E231", borderColor: "#B8E231" },
   categoryText: { color: "#4F574E", fontSize: 11, fontWeight: "700" },
   categoryTextActive: { color: "#151B14", fontWeight: "900" },
-  referenceNotice: { marginHorizontal: 20, marginTop: 20, padding: 12, gap: 8, borderRadius: 15, backgroundColor: "#F4F8E8", borderWidth: 1, borderColor: "#DFECC4", flexDirection: "row", alignItems: "flex-start" },
+  referenceNotice: { marginHorizontal: 20, marginTop: 2, padding: 11, gap: 8, borderRadius: 14, backgroundColor: "#F4F8E8", flexDirection: "row", alignItems: "center" },
   referenceText: { flex: 1, color: "#4E5D21", fontSize: 11, lineHeight: 16, fontWeight: "600" },
+  impactCard: { marginHorizontal: 20, marginTop: 8, borderRadius: 19, padding: 14, backgroundColor: "#EDF8C8", flexDirection: "row", alignItems: "center", gap: 10 },
+  impactIcon: { height: 34, width: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#C9EC64" },
+  impactText: { flex: 1 },
+  impactValue: { color: "#253000", fontSize: 12, fontWeight: "900" },
+  impactCopy: { color: "#5A6D1C", fontSize: 10, fontWeight: "700", marginTop: 2 },
   empty: { alignItems: "center", paddingHorizontal: 42, paddingVertical: 34, gap: 8 },
   emptyTitle: { color: "#151B14", fontSize: 16, fontWeight: "900", marginTop: 4 },
   emptyText: { color: "#697065", fontSize: 12, lineHeight: 18, textAlign: "center" },

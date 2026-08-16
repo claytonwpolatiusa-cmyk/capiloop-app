@@ -15,7 +15,7 @@ export function OfferCard({ offer, variant = "large" }: { offer: Offer; variant?
   };
 
   return (
-    <Pressable onPress={openOffer} style={({ pressed }) => [styles.card, compact && styles.cardCompact, pressed && styles.pressed]}>
+    <Pressable onPress={openOffer} accessibilityRole="button" accessibilityLabel={`Ver sacola de ${offer.store}`} style={({ pressed }) => [styles.card, compact && styles.cardCompact, pressed && styles.pressed]}>
       <Image source={offer.image} style={[styles.image, compact && styles.imageCompact]} />
       <View style={[styles.content, compact && styles.contentCompact]}>
         <View style={styles.topline}>
@@ -48,10 +48,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginHorizontal: 20,
     marginBottom: 14,
-    minHeight: 146,
+    minHeight: 138,
     overflow: "hidden",
     shadowColor: "#182314",
-    shadowOpacity: 0.07,
+    shadowOpacity: 0.09,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 18,
     elevation: 3,
@@ -59,13 +59,13 @@ const styles = StyleSheet.create({
   },
   cardCompact: { marginHorizontal: 0, marginBottom: 12, minHeight: 112 },
   pressed: { opacity: 0.77, transform: [{ scale: 0.987 }] },
-  image: { width: 132, height: "100%", backgroundColor: "#EEF0EB" },
+  image: { width: 124, height: "100%", backgroundColor: "#EEF0EB" },
   imageCompact: { width: 104 },
-  content: { flex: 1, padding: 15, justifyContent: "space-between" },
+  content: { flex: 1, padding: 14, justifyContent: "space-between" },
   contentCompact: { padding: 12 },
   topline: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   store: { color: "#151B14", fontSize: 16, fontWeight: "800", letterSpacing: -0.25, flex: 1 },
-  stockPill: { backgroundColor: "#F4F8E8", borderRadius: 10, paddingHorizontal: 7, paddingVertical: 4 },
+  stockPill: { backgroundColor: "#ECF6C5", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 4 },
   stockText: { color: "#5E7D00", fontSize: 10, fontWeight: "800" },
   subtitle: { color: "#697065", fontSize: 12, marginTop: 2 },
   detailsRow: { flexDirection: "row", alignItems: "center", marginTop: 8, gap: 4 },
