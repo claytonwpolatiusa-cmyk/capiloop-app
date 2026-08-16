@@ -1,77 +1,29 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import * as Haptics from "expo-haptics";
-import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
-import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useState } from "react";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { startOAuthLogin } from "@/constants/oauth";
 import { formatCurrency } from "@/lib/capiloop-data";
 import { useCatalog } from "@/lib/catalog";
 import { useCapiLoop } from "@/lib/capiloop-store";
-import { createTRPCClient } from "@/lib/trpc";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function OfferDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getOffer, isLoading } = useCatalog();
   const offer = getOffer(id);
-  const { isAuthenticated } = useAuth();
-  const { reservations, recordRemoteReservation, reserveOffer, updateRemoteReservationStatus } = useCapiLoop();
-  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+  const { reservations } = useCapiLoop();
   const currentReservation = reservations.find((reservation) => reservation.offerId === id && reservation.paymentStatus !== "failed");
 
   if (!offer) {
     return <ScreenContainer className="items-center justify-center px-8"><Text className="text-center text-foreground">{isLoading ? "Atualizando oferta…" : "Esta sacola não está mais disponível."}</Text></ScreenContainer>;
   }
 
-  const startCheckout = async () => {
+  const openReservationConfirmation = () => {
     if (currentReservation) {
       router.push({ pathname: "/reservation/[id]", params: { id: currentReservation.id } });
       return;
     }
-    if (offer.source === "reference") {
-      const reservation = await reserveOffer(offer);
-      router.push({ pathname: "/reservation/[id]", params: { id: reservation.id } });
-      return;
-    }
-    if (!isAuthenticated) {
-      Alert.alert("Entre para reservar", "A reserva é vinculada à sua conta para garantir a retirada.", [
-        { text: "Agora não", style: "cancel" },
-        { text: "Fazer login", onPress: () => void startOAuthLogin() },
-      ]);
-      return;
-    }
-    const bagId = Number(offer.id);
-    if (!Number.isSafeInteger(bagId) || bagId <= 0) {
-      Alert.alert("Oferta indisponível", "Atualize o catálogo e tente novamente.");
-      return;
-    }
-
-    setIsStartingCheckout(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
-    try {
-      const client = createTRPCClient();
-      const result = await client.checkout.startCheckoutPro.mutate({ bagId });
-      await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code });
-
-      if (Platform.OS === "web") {
-        await WebBrowser.openBrowserAsync(result.preference.initPoint);
-        router.replace({ pathname: "/checkout/result", params: { reservationId: result.reservation.id, status: "pending" } });
-        return;
-      }
-
-      const response = await WebBrowser.openAuthSessionAsync(result.preference.initPoint, "capiloop://checkout/result");
-      const returnedStatus = response.type === "success" && response.url ? new URL(response.url).searchParams.get("status") : "pending";
-      await updateRemoteReservationStatus(String(result.reservation.id), returnedStatus === "approved" ? "confirmed" : returnedStatus === "failed" || returnedStatus === "failure" ? "failed" : "pending");
-      router.replace({ pathname: "/checkout/result", params: { reservationId: result.reservation.id, status: returnedStatus ?? "pending" } });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.";
-      Alert.alert("Pagamento indisponível", message);
-    } finally {
-      setIsStartingCheckout(false);
-    }
+    router.push({ pathname: "/offer/confirm", params: { id: offer.id } });
   };
 
   return (
@@ -96,7 +48,7 @@ export default function OfferDetailScreen() {
       </ScrollView>
       <View style={styles.actionBar}>
         <View><Text style={styles.original}>{formatCurrency(offer.originalPrice)}</Text><Text style={styles.price}>{formatCurrency(offer.price)}</Text></View>
-        <Pressable disabled={isStartingCheckout} onPress={() => void startCheckout()} style={({ pressed }) => [styles.reserveButton, (pressed || isStartingCheckout) && { opacity: 0.78, transform: [{ scale: 0.98 }] }]}><Text style={styles.reserveText}>{currentReservation ? "Ver reserva" : isStartingCheckout ? "Abrindo checkout…" : offer.source === "reference" ? "Reservar demonstração" : "Reservar e pagar"}</Text><MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" /></Pressable>
+        <Pressable onPress={openReservationConfirmation} style={({ pressed }) => [styles.reserveButton, pressed && { opacity: 0.78, transform: [{ scale: 0.98 }] }]}><Text style={styles.reserveText}>{currentReservation ? "Ver reserva" : "Reservar"}</Text><MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" /></Pressable>
       </View>
     </ScreenContainer>
   );

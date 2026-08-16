@@ -58,3 +58,21 @@
 
 - [x] Restaurar a rota de pedido ausente que impede o carregamento da tela principal na web.
 - [x] Validar novamente a renderização da descoberta após corrigir a rota.
+
+## Publicação de sacolas reais
+
+- [ ] Verificar parceiro aprovado e acesso ao portal de publicação.
+- [ ] Coletar dados confirmados das sacolas, preços, quantidades e janelas de retirada.
+- [ ] Cadastrar sacolas reais após a confirmação de publicação.
+- [ ] Confirmar a exibição das novas sacolas no catálogo público.
+
+## Acesso ao portal do parceiro
+
+- [x] Corrigir o roteamento base do portal em `/partners/` para carregar as páginas do parceiro.
+
+## Confirmação de reserva e pagamento
+
+- [x] Criar uma etapa de confirmação antes de reservar uma sacola.
+- [x] Exibir claramente a janela de retirada, o valor e as condições da reserva.
+- [x] Permitir a escolha entre PIX, Apple Pay e cartão cadastrado antes do checkout.
+- [x] Conectar a escolha ao checkout e validar os estados de confirmação, cancelamento e erro.
