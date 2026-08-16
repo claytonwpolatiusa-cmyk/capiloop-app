@@ -125,3 +125,11 @@
 - [x] Criar nova arte de lançamento com maior nitidez, contraste e tipografia marcante.
 - [x] Preparar nova legenda de alto impacto para a primeira publicação.
 - [x] Submeter a nova publicação à confirmação antes do envio ao Instagram.
+
+## Sequência editorial para Instagram
+
+- [x] Definir o calendário de cinco posts diários, com horários e objetivos de engajamento.
+- [x] Criar cinco artes de feed com linguagem visual consistente e conteúdos complementares.
+- [x] Criar legendas, CTAs e instruções de publicação para a sequência.
+- [x] Criar um story vertical para publicação imediata.
+- [ ] Submeter o story à confirmação antes de publicá-lo no Instagram.
