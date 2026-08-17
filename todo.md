@@ -146,3 +146,5 @@
 - [x] Publicar o reel realista disponível enquanto o restante do lote aguarda nova cota de geração.
 - [ ] Gerar e publicar uma nova rodada imediata de reels, carrosséis e bastidores variados.
 - [x] Criar kit de prompts e roteiros detalhados para vídeos fotorrealistas da CapiLoop em outras IAs.
+- [ ] Gerar e publicar o vídeo fotorrealista “Isso não é resto”.
+- [x] Criar série de posts tipográficos afetivos com humor familiar e comida boa em destaque.
