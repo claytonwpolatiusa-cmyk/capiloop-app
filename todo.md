@@ -151,4 +151,11 @@
 - [x] Criar posts da estética sacola verde-lima, capivara e tipografia monumental inspirada na referência aprovada.
 - [x] Montar calendário semanal que alterne as duas estéticas em uma publicação por dia.
 - [x] Criar stories complementares para cada publicação semanal.
-- [ ] Submeter todo o calendário em rascunho à aprovação antes de agendar ou publicar.
+- [x] Submeter todo o calendário em rascunho à aprovação antes de agendar ou publicar.
+- [ ] Configurar as publicações diárias e os stories da semana no Instagram.
+
+## Material comercial para parceiros
+
+- [x] Criar book institucional em PDF para convite de restaurantes, cafés, padarias e mercados.
+- [x] Incluir roteiro prático de captação e início de relacionamento com estabelecimentos.
+- [x] Preparar a entrega do material ao e-mail indicado pelo usuário, se houver canal de envio disponível.
