@@ -148,3 +148,7 @@
 - [x] Criar kit de prompts e roteiros detalhados para vídeos fotorrealistas da CapiLoop em outras IAs.
 - [ ] Gerar e publicar o vídeo fotorrealista “Isso não é resto”.
 - [x] Criar série de posts tipográficos afetivos com humor familiar e comida boa em destaque.
+- [x] Criar posts da estética sacola verde-lima, capivara e tipografia monumental inspirada na referência aprovada.
+- [x] Montar calendário semanal que alterne as duas estéticas em uma publicação por dia.
+- [x] Criar stories complementares para cada publicação semanal.
+- [ ] Submeter todo o calendário em rascunho à aprovação antes de agendar ou publicar.
