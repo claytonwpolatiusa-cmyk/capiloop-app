@@ -153,6 +153,8 @@
 - [x] Criar stories complementares para cada publicação semanal.
 - [x] Submeter todo o calendário em rascunho à aprovação antes de agendar ou publicar.
 - [ ] Configurar as publicações diárias e os stories da semana no Instagram.
+- [x] Publicar uma peça pronta no Instagram hoje.
+- [x] Gerar e publicar um Reel animado jovem com a capivara CapiLoop.
 
 ## Material comercial para parceiros
 

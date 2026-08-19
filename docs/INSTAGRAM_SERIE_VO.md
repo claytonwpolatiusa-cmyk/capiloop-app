@@ -33,6 +33,8 @@ nós concordamos.
 
 **Legenda.** `Toda família tem uma frase que atravessa gerações. Essa aqui a gente leva a sério. Comida boa merece outro destino. #CapiLoop #ComidaBoa #MenosDesperdícioMaisSabor`
 
+**Status.** Publicado no Instagram: [abrir post](https://www.instagram.com/p/DcN696nmxN-/).
+
 ## Post 2 — A regra simples
 
 **Texto na arte.**
