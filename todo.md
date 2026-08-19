@@ -155,6 +155,7 @@
 - [ ] Configurar as publicações diárias e os stories da semana no Instagram.
 - [x] Publicar uma peça pronta no Instagram hoje.
 - [x] Gerar e publicar um Reel animado jovem com a capivara CapiLoop.
+- [x] Organizar e enviar por e-mail o kit de publicação manual com os ativos ainda não publicados e suas legendas.
 
 ## Material comercial para parceiros
 
