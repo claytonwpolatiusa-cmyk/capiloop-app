@@ -17,7 +17,7 @@ import { getNearbyOffers } from "@/lib/nearby-offers";
 import { getFavoriteAvailabilityAlerts } from "@/lib/favorite-alerts";
 
 export default function DiscoverScreen() {
-  const { impact, favoriteStores } = useCapiLoop();
+  const { impact, favoriteStores, mutedFavoriteStores } = useCapiLoop();
   const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
   const [selectedCategory, setSelectedCategory] = useState<OfferCategory | "Todas">("Todas");
   const [sortBy, setSortBy] = useState<OfferSort>("distance");
@@ -28,7 +28,7 @@ export default function DiscoverScreen() {
     [offers, selectedCategory, sortBy, storeQuery],
   );
   const nearbyOffers = useMemo(() => getNearbyOffers(offers), [offers]);
-  const favoriteAlerts = useMemo(() => getFavoriteAvailabilityAlerts(offers, favoriteStores), [favoriteStores, offers]);
+  const favoriteAlerts = useMemo(() => getFavoriteAvailabilityAlerts(offers, favoriteStores, mutedFavoriteStores), [favoriteStores, mutedFavoriteStores, offers]);
   const favoriteBagCount = useMemo(() => favoriteAlerts.reduce((total, alert) => total + alert.availableBags, 0), [favoriteAlerts]);
 
   return (

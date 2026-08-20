@@ -22,4 +22,8 @@ describe("getFavoriteAvailabilityAlerts", () => {
   it("não cria alerta quando não há lojas salvas com estoque", () => {
     expect(getFavoriteAvailabilityAlerts([offer("Favorita", false)], ["Favorita"])).toEqual([]);
   });
+
+  it("respeita lojas favoritadas que foram silenciadas", () => {
+    expect(getFavoriteAvailabilityAlerts([offer("Favorita", true)], ["Favorita"], ["Favorita"])).toEqual([]);
+  });
 });

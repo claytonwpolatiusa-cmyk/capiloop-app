@@ -6,12 +6,13 @@ export type FavoriteAvailabilityAlert = {
 };
 
 /** Returns available bags from favorite stores, grouped for the discovery alert. */
-export function getFavoriteAvailabilityAlerts(offers: Offer[], favoriteStores: string[]): FavoriteAvailabilityAlert[] {
+export function getFavoriteAvailabilityAlerts(offers: Offer[], favoriteStores: string[], mutedStores: string[] = []): FavoriteAvailabilityAlert[] {
   const favorites = new Set(favoriteStores);
+  const muted = new Set(mutedStores);
   const grouped = new Map<string, number>();
 
   offers.forEach((offer) => {
-    if (!favorites.has(offer.store) || offer.isAvailable === false) return;
+    if (!favorites.has(offer.store) || muted.has(offer.store) || offer.isAvailable === false) return;
     grouped.set(offer.store, (grouped.get(offer.store) ?? 0) + 1);
   });
 

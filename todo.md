@@ -16,7 +16,7 @@
 - [ ] Implementar tela de gerenciamento de endereços no app.
 - [x] Integrar MercadoPago ou Stripe para pagamentos com cartão e PIX.
 - [x] Criar telas de checkout e confirmação de pagamento.
-- [ ] Implementar tela de histórico de pedidos no app.
+- [x] Implementar tela de histórico de pedidos no app.
 
 ## Fase 3: Dashboard de Parceiros
 
@@ -87,6 +87,10 @@
 - [x] Validar os fluxos de retirada, indisponibilidade e favoritos.
 - [x] Exibir um alerta visual na descoberta quando uma loja favoritada tiver novas sacolas disponíveis.
 - [x] Criar animação de sucesso e confirmação de pedido com informações completas após o pagamento.
+- [x] Permitir ativar ou silenciar alertas individualmente para cada loja favoritada.
+- [x] Mostrar aviso visual e contagem regressiva quando a janela de retirada estiver perto de expirar.
+- [x] Adicionar no perfil o histórico de pedidos anteriores com acesso aos comprovantes.
+- [x] Validar a gestão de alertas, a urgência de retirada e o histórico de pedidos.
 
 ## Redesenho da descoberta
 

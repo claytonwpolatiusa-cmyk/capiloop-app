@@ -1,13 +1,14 @@
 import * as Haptics from "expo-haptics";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { formatCurrency } from "@/lib/capiloop-data";
 import { useCatalog } from "@/lib/catalog";
 import { useCapiLoop } from "@/lib/capiloop-store";
+import { getPickupUrgency } from "@/lib/pickup-urgency";
 
 export default function CheckoutResultScreen() {
   const { reservationId, status } = useLocalSearchParams<{ reservationId?: string; status?: string }>();
@@ -15,11 +16,13 @@ export default function CheckoutResultScreen() {
   const { getOffer } = useCatalog();
   const badgeScale = useRef(new Animated.Value(0.7)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
+  const [now, setNow] = useState(() => new Date());
   const approved = status === "approved";
   const failed = status === "failed" || status === "failure";
   const reservation = reservations.find((item) => item.id === reservationId);
   const offer = reservation?.offerSnapshot ?? getOffer(reservation?.offerId);
   const pickupTime = reservation?.pickupTime ?? offer?.pickupWindow;
+  const pickupUrgency = approved ? getPickupUrgency(reservation?.pickupTime, now) : null;
   const title = approved ? "Pedido confirmado" : failed ? "Pagamento não concluído" : "Pedido recebido";
   const copy = approved ? "Sua sacola está garantida. Guarde este código para retirar no balcão." : failed ? "Nenhuma cobrança foi confirmada. Você pode iniciar outra reserva." : "Seu pedido foi criado. Assim que o pagamento for aprovado, sua retirada estará garantida.";
 
@@ -30,6 +33,11 @@ export default function CheckoutResultScreen() {
     ]).start();
     if (approved) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
   }, [approved, badgeScale, cardOpacity]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} className="flex-1">
@@ -46,6 +54,7 @@ export default function CheckoutResultScreen() {
             <View style={styles.orderTop}><View><Text style={styles.cardEyebrow}>SEU PEDIDO</Text><Text style={styles.store}>{offer.store}</Text><Text style={styles.subtitle}>{offer.subtitle}</Text></View><View style={styles.bagIcon}><MaterialIcons name="shopping-bag" size={22} color="#253000" /></View></View>
             <View style={styles.rule} />
             <View style={styles.detailRow}><MaterialIcons name="storefront" size={17} color="#5E7D00" /><View style={styles.detailCopy}><Text style={styles.detailLabel}>RETIRADA NO LOCAL</Text><Text style={styles.detailValue}>{pickupTime ?? "Horário a confirmar"} · {offer.address}</Text></View></View>
+            {pickupUrgency ? <View style={[styles.urgencyBox, pickupUrgency.level === "critical" && styles.urgencyCritical, pickupUrgency.level === "expired" && styles.urgencyExpired]}><MaterialIcons name={pickupUrgency.level === "expired" ? "error-outline" : "schedule"} size={17} color={pickupUrgency.level === "critical" || pickupUrgency.level === "expired" ? "#B84A36" : "#886A00"} /><View style={styles.urgencyCopy}><Text style={styles.urgencyTitle}>{pickupUrgency.level === "expired" ? "RETIRADA ENCERRADA" : "ATENÇÃO À RETIRADA"}</Text><Text style={styles.urgencyText}>{pickupUrgency.label}</Text></View></View> : null}
             <View style={styles.detailRow}><MaterialIcons name="payments" size={17} color="#5E7D00" /><View style={styles.detailCopy}><Text style={styles.detailLabel}>FORMA DE PAGAMENTO</Text><Text style={styles.detailValue}>{reservation?.paymentMethod ?? "Mercado Pago"}</Text></View>{offer.price ? <Text style={styles.amount}>{formatCurrency(offer.price)}</Text> : null}</View>
             <View style={styles.codeBox}><Text style={styles.codeLabel}>CÓDIGO DE RETIRADA</Text><Text style={styles.code}>{reservation?.code ?? "A caminho"}</Text>{!approved ? <Text style={styles.codeHint}>Ele será liberado após a confirmação do pagamento.</Text> : null}</View>
           </Animated.View>
@@ -70,5 +79,6 @@ const styles = StyleSheet.create({
   orderTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, cardEyebrow: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, store: { color: "#151B14", fontSize: 17, fontWeight: "900", marginTop: 4 }, subtitle: { color: "#697065", fontSize: 11, marginTop: 2 }, bagIcon: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#ECF6CD" },
   rule: { height: 1, backgroundColor: "#E8ECE4", marginVertical: 15 }, detailRow: { flexDirection: "row", alignItems: "flex-start", gap: 9, marginTop: 11 }, detailCopy: { flex: 1 }, detailLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.65 }, detailValue: { color: "#283027", fontSize: 12, lineHeight: 17, fontWeight: "700", marginTop: 3 }, amount: { color: "#151B14", fontSize: 14, fontWeight: "900", marginTop: 7 },
   codeBox: { paddingVertical: 13, paddingHorizontal: 12, borderRadius: 17, backgroundColor: "#F4F8E8", marginTop: 17, alignItems: "center" }, codeLabel: { color: "#5E7D00", fontSize: 9, fontWeight: "900", letterSpacing: 0.75 }, code: { color: "#151B14", fontSize: 23, letterSpacing: 2.2, fontWeight: "900", marginTop: 4 }, codeHint: { color: "#697065", fontSize: 10, lineHeight: 14, textAlign: "center", marginTop: 5 },
+  urgencyBox: { alignItems: "center", backgroundColor: "#FFF3D9", borderRadius: 15, flexDirection: "row", gap: 9, marginTop: 13, padding: 12 }, urgencyCritical: { backgroundColor: "#FDE3DD" }, urgencyExpired: { backgroundColor: "#F7D7D4" }, urgencyCopy: { flex: 1 }, urgencyTitle: { color: "#886A00", fontSize: 9, fontWeight: "900", letterSpacing: 0.65 }, urgencyText: { color: "#5B4A19", fontSize: 11, fontWeight: "700", marginTop: 2 },
   footer: { paddingHorizontal: 24, paddingBottom: 14, paddingTop: 10 }, primary: { minHeight: 53, borderRadius: 17, backgroundColor: "#151B14", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }, primaryText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900" }, secondary: { padding: 14, alignItems: "center" }, secondaryText: { color: "#5E7D00", fontSize: 13, fontWeight: "900" }, pressed: { opacity: 0.76, transform: [{ scale: 0.98 }] },
 });

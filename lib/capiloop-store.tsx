@@ -21,12 +21,15 @@ type CapiLoopContextValue = {
   reservations: Reservation[];
   impact: Impact;
   favoriteStores: string[];
+  mutedFavoriteStores: string[];
   isReady: boolean;
   reserveOffer: (offer: Offer, pickupTime?: string) => Promise<Reservation>;
   recordRemoteReservation: (input: { id: string; offer: Offer; code: string; pickupTime?: string; paymentMethod?: string }) => Promise<Reservation>;
   updateRemoteReservationStatus: (id: string, paymentStatus: Reservation["paymentStatus"]) => Promise<void>;
   isFavoriteStore: (store: string) => boolean;
   toggleFavoriteStore: (store: string) => Promise<void>;
+  isFavoriteAlertEnabled: (store: string) => boolean;
+  toggleFavoriteAlert: (store: string) => Promise<void>;
 };
 
 const STORAGE_KEY = "capiloop-local-state";
@@ -41,23 +44,25 @@ export function CapiLoopProvider({ children }: { children: ReactNode }) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [impact, setImpact] = useState<Impact>(initialImpact);
   const [favoriteStores, setFavoriteStores] = useState<string[]>([]);
+  const [mutedFavoriteStores, setMutedFavoriteStores] = useState<string[]>([]);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((rawValue) => {
         if (!rawValue) return;
-        const parsed = JSON.parse(rawValue) as { reservations?: Reservation[]; impact?: Impact; favoriteStores?: string[] };
+        const parsed = JSON.parse(rawValue) as { reservations?: Reservation[]; impact?: Impact; favoriteStores?: string[]; mutedFavoriteStores?: string[] };
         setReservations((parsed.reservations ?? []).map((reservation) => ({ ...reservation, paymentStatus: reservation.paymentStatus ?? "pending" })));
         setImpact(parsed.impact ?? initialImpact);
         setFavoriteStores(parsed.favoriteStores ?? []);
+        setMutedFavoriteStores(parsed.mutedFavoriteStores ?? []);
       })
       .catch(() => undefined)
       .finally(() => setIsReady(true));
   }, []);
 
-  const persist = useCallback(async (nextReservations: Reservation[], nextImpact: Impact, nextFavorites: string[]) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ reservations: nextReservations, impact: nextImpact, favoriteStores: nextFavorites }));
+  const persist = useCallback(async (nextReservations: Reservation[], nextImpact: Impact, nextFavorites: string[], nextMutedFavorites: string[]) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ reservations: nextReservations, impact: nextImpact, favoriteStores: nextFavorites, mutedFavoriteStores: nextMutedFavorites }));
   }, []);
 
   /** @deprecated Demo-only compatibility path. Live reservations must use recordRemoteReservation. */
@@ -69,9 +74,9 @@ export function CapiLoopProvider({ children }: { children: ReactNode }) {
     const nextImpact = applyOfferImpact(impact, offer);
     setReservations(nextReservations);
     setImpact(nextImpact);
-    await persist(nextReservations, nextImpact, favoriteStores);
+    await persist(nextReservations, nextImpact, favoriteStores, mutedFavoriteStores);
     return reservation;
-  }, [favoriteStores, impact, persist, reservations]);
+  }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
 
   const recordRemoteReservation = useCallback(async ({ id, offer, code, pickupTime, paymentMethod }: { id: string; offer: Offer; code: string; pickupTime?: string; paymentMethod?: string }) => {
     const existing = reservations.find((reservation) => reservation.id === id);
@@ -79,26 +84,39 @@ export function CapiLoopProvider({ children }: { children: ReactNode }) {
     const reservation: Reservation = { id, offerId: offer.id, code, createdAt: new Date().toISOString(), paymentStatus: "pending", paymentMethod, pickupTime, offerSnapshot: createOfferSnapshot(offer) };
     const nextReservations = [reservation, ...reservations];
     setReservations(nextReservations);
-    await persist(nextReservations, impact, favoriteStores);
+    await persist(nextReservations, impact, favoriteStores, mutedFavoriteStores);
     return reservation;
-  }, [favoriteStores, impact, persist, reservations]);
+  }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
 
   const updateRemoteReservationStatus = useCallback(async (id: string, paymentStatus: Reservation["paymentStatus"]) => {
     const nextReservations = reservations.map((reservation) => reservation.id === id ? { ...reservation, paymentStatus } : reservation);
     setReservations(nextReservations);
-    await persist(nextReservations, impact, favoriteStores);
-  }, [favoriteStores, impact, persist, reservations]);
+    await persist(nextReservations, impact, favoriteStores, mutedFavoriteStores);
+  }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
 
   const isFavoriteStore = useCallback((store: string) => favoriteStores.includes(store), [favoriteStores]);
   const toggleFavoriteStore = useCallback(async (store: string) => {
-    const nextFavorites = favoriteStores.includes(store) ? favoriteStores.filter((item) => item !== store) : [...favoriteStores, store];
+    const isRemoving = favoriteStores.includes(store);
+    const nextFavorites = isRemoving ? favoriteStores.filter((item) => item !== store) : [...favoriteStores, store];
+    const nextMutedFavorites = isRemoving ? mutedFavoriteStores.filter((item) => item !== store) : mutedFavoriteStores;
     setFavoriteStores(nextFavorites);
-    await persist(reservations, impact, nextFavorites);
-  }, [favoriteStores, impact, persist, reservations]);
+    setMutedFavoriteStores(nextMutedFavorites);
+    await persist(reservations, impact, nextFavorites, nextMutedFavorites);
+  }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
+
+  const isFavoriteAlertEnabled = useCallback((store: string) => favoriteStores.includes(store) && !mutedFavoriteStores.includes(store), [favoriteStores, mutedFavoriteStores]);
+  const toggleFavoriteAlert = useCallback(async (store: string) => {
+    if (!favoriteStores.includes(store)) return;
+    const nextMutedFavorites = mutedFavoriteStores.includes(store)
+      ? mutedFavoriteStores.filter((item) => item !== store)
+      : [...mutedFavoriteStores, store];
+    setMutedFavoriteStores(nextMutedFavorites);
+    await persist(reservations, impact, favoriteStores, nextMutedFavorites);
+  }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
 
   const value = useMemo(
-    () => ({ reservations, impact, favoriteStores, isReady, reserveOffer, recordRemoteReservation, updateRemoteReservationStatus, isFavoriteStore, toggleFavoriteStore }),
-    [favoriteStores, impact, isFavoriteStore, isReady, recordRemoteReservation, reservations, reserveOffer, toggleFavoriteStore, updateRemoteReservationStatus],
+    () => ({ reservations, impact, favoriteStores, mutedFavoriteStores, isReady, reserveOffer, recordRemoteReservation, updateRemoteReservationStatus, isFavoriteStore, toggleFavoriteStore, isFavoriteAlertEnabled, toggleFavoriteAlert }),
+    [favoriteStores, impact, isFavoriteAlertEnabled, isFavoriteStore, isReady, mutedFavoriteStores, recordRemoteReservation, reservations, reserveOffer, toggleFavoriteAlert, toggleFavoriteStore, updateRemoteReservationStatus],
   );
 
   return <CapiLoopContext.Provider value={value}>{children}</CapiLoopContext.Provider>;
