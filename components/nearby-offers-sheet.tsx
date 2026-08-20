@@ -86,14 +86,16 @@ export function NearbyOffersSheet({ offers, isLoading, error, onDismiss }: Nearb
 }
 
 function NearbyOfferCard({ offer }: { offer: Offer }) {
+  const isAvailable = offer.isAvailable !== false;
   const openOffer = () => {
+    if (!isAvailable) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     router.push({ pathname: "/offer/[id]", params: { id: offer.id } });
   };
 
   return (
-    <Pressable onPress={openOffer} accessibilityRole="button" accessibilityLabel={`Ver sacola próxima de ${offer.store}`} style={({ pressed }) => [styles.card, { backgroundColor: offer.accent }, pressed && styles.pressed]}>
-      <Image source={offer.image} style={styles.cardImage} />
+    <Pressable disabled={!isAvailable} onPress={openOffer} accessibilityRole="button" accessibilityState={{ disabled: !isAvailable }} accessibilityLabel={isAvailable ? `Ver sacola próxima de ${offer.store}` : `${offer.store} está sem sacolas disponíveis`} style={({ pressed }) => [styles.card, { backgroundColor: offer.accent }, !isAvailable && styles.cardUnavailable, pressed && isAvailable && styles.pressed]}>
+      <Image source={offer.image} style={[styles.cardImage, !isAvailable && styles.imageUnavailable]} />
       <View style={styles.cardContent}>
         <Text numberOfLines={1} style={styles.cardStore}>{offer.store}</Text>
         <View style={styles.metaRow}>
@@ -103,8 +105,8 @@ function NearbyOfferCard({ offer }: { offer: Offer }) {
           <Text style={styles.metaText}>{offer.pickupWindow}</Text>
         </View>
         <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatCurrency(offer.price)}</Text>
-          <View style={styles.plus}><MaterialIcons name="add" size={17} color="#FFFFFF" /></View>
+          <Text style={[styles.price, !isAvailable && styles.textUnavailable]}>{isAvailable ? formatCurrency(offer.price) : "Esgotada"}</Text>
+          <View style={[styles.plus, !isAvailable && styles.plusUnavailable]}><MaterialIcons name={isAvailable ? "add" : "block"} size={17} color="#FFFFFF" /></View>
         </View>
       </View>
     </Pressable>
@@ -123,14 +125,18 @@ const styles = StyleSheet.create({
   dismissText: { color: "#253000", fontSize: 11, fontWeight: "900" },
   cards: { paddingLeft: 20, paddingRight: 8, gap: 12 },
   card: { width: 178, height: 198, borderRadius: 22, overflow: "hidden", shadowColor: "#182314", shadowOpacity: 0.1, shadowRadius: 9, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  cardUnavailable: { backgroundColor: "#D9DDD6", shadowOpacity: 0 },
   cardImage: { width: "100%", height: 86, backgroundColor: "#F2F4F0" },
+  imageUnavailable: { opacity: 0.32 },
   cardContent: { flex: 1, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#FFFFFF" },
   cardStore: { color: "#151B14", fontSize: 14, fontWeight: "900", letterSpacing: -0.3 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 5 },
   metaText: { color: "#4F574E", fontSize: 9, fontWeight: "800", marginRight: 2 },
   priceRow: { marginTop: "auto", flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   price: { color: "#151B14", fontSize: 18, fontWeight: "900", letterSpacing: -0.7 },
+  textUnavailable: { color: "#747A73", fontSize: 13 },
   plus: { width: 30, height: 30, borderRadius: 12, backgroundColor: "#151B14", alignItems: "center", justifyContent: "center" },
+  plusUnavailable: { backgroundColor: "#8E958C" },
   emptyState: { borderRadius: 22, marginHorizontal: 20, padding: 18, backgroundColor: "#F4F8E8", flexDirection: "row", alignItems: "center", gap: 12 },
   emptyIcon: { height: 38, width: 38, borderRadius: 14, backgroundColor: "#E3F1B8", alignItems: "center", justifyContent: "center" },
   emptyContent: { flex: 1 },

@@ -4,26 +4,28 @@ import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatCurrency, type Offer } from "@/lib/capiloop-data";
-import { getVisibleReputation, REPUTATION_HIGHLIGHTS } from "@/lib/offer-reputation";
+import { getVisibleReputation, hasEnoughSalesForPublicStats, REPUTATION_HIGHLIGHTS } from "@/lib/offer-reputation";
 
 export function OfferCard({ offer, variant = "large" }: { offer: Offer; variant?: "large" | "compact" }) {
   const compact = variant === "compact";
   const savings = Math.round((1 - offer.price / offer.originalPrice) * 100);
   const reputation = getVisibleReputation(offer.reputation);
   const filledStars = reputation?.averageRating === null ? 0 : Math.round(reputation?.averageRating ?? 0);
+  const isAvailable = offer.isAvailable !== false;
 
   const openOffer = () => {
+    if (!isAvailable) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     router.push({ pathname: "/offer/[id]", params: { id: offer.id } });
   };
 
   return (
-    <Pressable onPress={openOffer} accessibilityRole="button" accessibilityLabel={`Ver sacola de ${offer.store}`} style={({ pressed }) => [styles.card, compact && styles.cardCompact, pressed && styles.pressed]}>
-      <Image source={offer.image} style={[styles.image, compact && styles.imageCompact]} />
+    <Pressable disabled={!isAvailable} onPress={openOffer} accessibilityRole="button" accessibilityState={{ disabled: !isAvailable }} accessibilityLabel={isAvailable ? `Ver sacola de ${offer.store}` : `${offer.store} está sem sacolas disponíveis`} style={({ pressed }) => [styles.card, compact && styles.cardCompact, !isAvailable && styles.cardUnavailable, pressed && isAvailable && styles.pressed]}>
+      <Image source={offer.image} style={[styles.image, compact && styles.imageCompact, !isAvailable && styles.imageUnavailable]} />
       <View style={[styles.content, compact && styles.contentCompact]}>
         <View style={styles.topline}>
           <Text numberOfLines={1} style={styles.store}>{offer.store}</Text>
-          <View style={styles.stockPill}>
+          <View style={[styles.stockPill, !isAvailable && styles.stockPillUnavailable]}>
             <Text style={styles.stockText}>{offer.stockLabel}</Text>
           </View>
         </View>
@@ -36,7 +38,7 @@ export function OfferCard({ offer, variant = "large" }: { offer: Offer; variant?
           <Text style={styles.detailText}>{offer.pickupWindow}</Text>
         </View>
         <View style={styles.pricingRow}>
-          <Text style={styles.price}>{formatCurrency(offer.price)}</Text>
+          <Text style={[styles.price, !isAvailable && styles.textUnavailable]}>{isAvailable ? formatCurrency(offer.price) : "Indisponível"}</Text>
           <Text style={styles.originalPrice}>{formatCurrency(offer.originalPrice)}</Text>
           <Text style={styles.savings}>{savings}% off</Text>
         </View>
@@ -55,10 +57,10 @@ export function OfferCard({ offer, variant = "large" }: { offer: Offer; variant?
               ) : (
                 <Text style={styles.collectingText}>Reputação em formação</Text>
               )}
-              <View style={styles.soldRow}>
+              {hasEnoughSalesForPublicStats(reputation.soldBags) ? <View style={styles.soldRow}>
                 <MaterialIcons name="shopping-bag" size={12} color="#697065" />
                 <Text style={styles.soldText}>{reputation.soldBags} sacolas vendidas</Text>
-              </View>
+              </View> : null}
             </View>
             {reputation.isEstablished && !compact ? (
               <View style={styles.highlightsList}>
@@ -93,14 +95,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   cardCompact: { marginHorizontal: 0, marginBottom: 12, minHeight: 128 },
+  cardUnavailable: { backgroundColor: "#F0F1EF", shadowOpacity: 0 },
   pressed: { opacity: 0.77, transform: [{ scale: 0.987 }] },
   image: { width: 124, height: "100%", backgroundColor: "#EEF0EB" },
   imageCompact: { width: 104 },
+  imageUnavailable: { opacity: 0.34 },
   content: { flex: 1, padding: 14, justifyContent: "space-between" },
   contentCompact: { padding: 12 },
   topline: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   store: { color: "#151B14", fontSize: 16, fontWeight: "800", letterSpacing: -0.25, flex: 1 },
   stockPill: { backgroundColor: "#ECF6C5", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 4 },
+  stockPillUnavailable: { backgroundColor: "#E0E3DE" },
   stockText: { color: "#5E7D00", fontSize: 10, fontWeight: "800" },
   subtitle: { color: "#697065", fontSize: 12, marginTop: 2 },
   detailsRow: { flexDirection: "row", alignItems: "center", marginTop: 8, gap: 4 },
@@ -108,6 +113,7 @@ const styles = StyleSheet.create({
   dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: "#BEC4B9", marginHorizontal: 2 },
   pricingRow: { flexDirection: "row", alignItems: "baseline", gap: 7, marginTop: 7 },
   price: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.7 },
+  textUnavailable: { color: "#7C8378", fontSize: 14 },
   originalPrice: { color: "#8C9388", fontSize: 11, textDecorationLine: "line-through" },
   savings: { color: "#5E7D00", fontSize: 11, fontWeight: "800" },
   reputationBlock: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E9ECE5", marginTop: 8, paddingTop: 7, gap: 5 },

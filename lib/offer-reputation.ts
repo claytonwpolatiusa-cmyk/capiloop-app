@@ -1,6 +1,10 @@
 export const MIN_SOLD_BAGS_FOR_RATING = 40;
 export const MIN_VERIFIED_RATINGS_FOR_DISPLAY = 12;
 
+export function hasEnoughSalesForPublicStats(soldBags: number) {
+  return soldBags >= MIN_SOLD_BAGS_FOR_RATING;
+}
+
 export type ReputationHighlightId =
   | "flavor"
   | "generous"
@@ -36,7 +40,7 @@ export const REPUTATION_HIGHLIGHTS: Record<ReputationHighlightId, string> = {
 export function getVisibleReputation(reputation?: EstablishmentReputation) {
   if (!reputation) return null;
 
-  const hasEnoughSales = reputation.soldBags >= MIN_SOLD_BAGS_FOR_RATING;
+  const hasEnoughSales = hasEnoughSalesForPublicStats(reputation.soldBags);
   const hasEnoughRatings = reputation.verifiedRatings >= MIN_VERIFIED_RATINGS_FOR_DISPLAY;
   const hasValidAverage = reputation.averageRating !== null && reputation.averageRating >= 0 && reputation.averageRating <= 5;
 

@@ -12,13 +12,14 @@ import { formatCurrency } from "@/lib/capiloop-data";
 import { useCatalog } from "@/lib/catalog";
 import { useCapiLoop } from "@/lib/capiloop-store";
 import { createTRPCClient } from "@/lib/trpc";
+import { buildPickupSlots } from "@/lib/pickup-slots";
 
 type PaymentMethod = "pix" | "apple-pay" | "card";
 
 const paymentMethods: Array<{ id: PaymentMethod; label: string; description: string; icon: "qr-code-2" | "apple" | "credit-card" }> = [
   { id: "pix", label: "PIX", description: "Pague pelo QR Code no Mercado Pago", icon: "qr-code-2" },
   { id: "apple-pay", label: "Apple Pay", description: "Use quando estiver disponível no seu dispositivo", icon: "apple" },
-  { id: "card", label: "Cartão cadastrado", description: "Use um cartão salvo ou adicione outro no Mercado Pago", icon: "credit-card" },
+  { id: "card", label: "Cartão de crédito", description: "Use um cartão salvo ou cadastre outro no Mercado Pago", icon: "credit-card" },
 ];
 
 export default function ConfirmReservationScreen() {
@@ -29,6 +30,8 @@ export default function ConfirmReservationScreen() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("pix");
   const [isContinuing, setIsContinuing] = useState(false);
   const offer = getOffer(id);
+  const pickupSlots = offer ? buildPickupSlots(offer.pickupWindow) : [];
+  const [pickupTime, setPickupTime] = useState(() => pickupSlots[0]?.value ?? "");
   const isReference = offer?.source === "reference";
 
   if (!offer) {
@@ -40,7 +43,7 @@ export default function ConfirmReservationScreen() {
     if (isReference) {
       setIsContinuing(true);
       try {
-        const reservation = await reserveOffer(offer);
+        const reservation = await reserveOffer(offer, pickupTime);
         router.replace({ pathname: "/reservation/[id]", params: { id: reservation.id } });
       } finally {
         setIsContinuing(false);
@@ -66,8 +69,8 @@ export default function ConfirmReservationScreen() {
     try {
       const client = createTRPCClient();
       if (selectedMethod === "pix") {
-        const result = await client.checkout.startPix.mutate({ bagId });
-        await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code });
+        const result = await client.checkout.startPix.mutate({ bagId, pickupTime });
+        await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code, pickupTime });
         if (result.payment.ticketUrl) {
           await WebBrowser.openBrowserAsync(result.payment.ticketUrl);
         } else {
@@ -76,8 +79,8 @@ export default function ConfirmReservationScreen() {
         router.replace({ pathname: "/checkout/result", params: { reservationId: result.reservation.id, status: result.payment.status } });
         return;
       }
-      const result = await client.checkout.startCheckoutPro.mutate({ bagId });
-      await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code });
+      const result = await client.checkout.startCheckoutPro.mutate({ bagId, pickupTime });
+      await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code, pickupTime });
 
       if (Platform.OS === "web") {
         await WebBrowser.openBrowserAsync(result.preference.initPoint);
@@ -113,9 +116,14 @@ export default function ConfirmReservationScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeading}><View style={styles.bagIcon}><MaterialIcons name="shopping-bag" size={20} color="#151B14" /></View><View style={styles.summaryHeadingCopy}><Text style={styles.store}>{offer.store}</Text><Text style={styles.subtitle}>{offer.subtitle}</Text></View><Text style={styles.price}>{formatCurrency(offer.price)}</Text></View>
           <View style={styles.rule} />
-          <View style={styles.infoRow}><MaterialIcons name="schedule" size={18} color="#5E7D00" /><View style={styles.infoCopy}><Text style={styles.infoLabel}>HORÁRIO DE RETIRADA</Text><Text style={styles.infoValue}>Hoje, {offer.pickupWindow}</Text></View></View>
+          <View style={styles.infoRow}><MaterialIcons name="storefront" size={18} color="#5E7D00" /><View style={styles.infoCopy}><Text style={styles.infoLabel}>FORMA DE RECEBIMENTO</Text><Text style={styles.infoValue}>Retirada no local · sem delivery</Text></View></View>
+          <View style={styles.infoRow}><MaterialIcons name="schedule" size={18} color="#5E7D00" /><View style={styles.infoCopy}><Text style={styles.infoLabel}>JANELA DE RETIRADA</Text><Text style={styles.infoValue}>Hoje, {offer.pickupWindow}</Text></View></View>
           <View style={styles.infoRow}><MaterialIcons name="location-on" size={18} color="#5E7D00" /><View style={styles.infoCopy}><Text style={styles.infoLabel}>LOCAL DE RETIRADA</Text><Text style={styles.infoValue}>{offer.address}</Text></View></View>
         </View>
+
+        <Text style={styles.sectionTitle}>Que horas você retira?</Text>
+        <Text style={styles.sectionCopy}>Selecione um horário dentro da janela da loja.</Text>
+        <View style={styles.slotRow}>{pickupSlots.map((slot) => { const selected = pickupTime === slot.value; return <Pressable key={slot.value} onPress={() => setPickupTime(slot.value)} accessibilityRole="radio" accessibilityState={{ selected }} style={({ pressed }) => [styles.slot, selected && styles.slotSelected, pressed && { opacity: 0.75 }]}><Text style={[styles.slotText, selected && styles.slotTextSelected]}>{slot.label}</Text></Pressable>; })}</View>
 
         {isReference ? <View style={styles.note}><MaterialIcons name="info-outline" size={18} color="#5E7D00" /><Text style={styles.noteText}>Esta é uma oferta de referência. Ela gera um comprovante demonstrativo e não abre uma cobrança.</Text></View> : <>
           <Text style={styles.sectionTitle}>Como quer pagar?</Text>
@@ -141,5 +149,5 @@ export default function ConfirmReservationScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingBottom: 132 }, topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, marginBottom: 30 }, backButton: { width: 43, height: 43, borderRadius: 15, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" }, topTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, topSpacer: { width: 43 }, eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.05 }, title: { color: "#151B14", fontSize: 31, lineHeight: 36, letterSpacing: -1.35, fontWeight: "900", marginTop: 7 }, intro: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 10 }, summaryCard: { marginTop: 24, padding: 17, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, summaryHeading: { flexDirection: "row", alignItems: "center", gap: 11 }, bagIcon: { width: 42, height: 42, borderRadius: 15, backgroundColor: "#ECF6CD", alignItems: "center", justifyContent: "center" }, summaryHeadingCopy: { flex: 1 }, store: { color: "#151B14", fontSize: 15, fontWeight: "900" }, subtitle: { color: "#697065", fontSize: 11, marginTop: 2 }, price: { color: "#151B14", fontSize: 18, fontWeight: "900" }, rule: { height: 1, backgroundColor: "#E8ECE4", marginVertical: 16 }, infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 12 }, infoCopy: { flex: 1 }, infoLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.65 }, infoValue: { color: "#151B14", fontSize: 13, lineHeight: 18, fontWeight: "800", marginTop: 3 }, sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", marginTop: 28 }, sectionCopy: { color: "#697065", fontSize: 12, lineHeight: 17, marginTop: 4 }, methods: { gap: 10, marginTop: 15 }, methodCard: { minHeight: 73, flexDirection: "row", alignItems: "center", gap: 11, padding: 12, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, methodCardSelected: { borderColor: "#8DAF25", backgroundColor: "#F8FCEB" }, methodIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: "#F2F4EF", alignItems: "center", justifyContent: "center" }, methodIconSelected: { backgroundColor: "#D7F07C" }, methodCopy: { flex: 1 }, methodTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, methodDescription: { color: "#697065", fontSize: 10, lineHeight: 14, marginTop: 2 }, radio: { width: 21, height: 21, borderRadius: 11, borderWidth: 1.5, borderColor: "#C7CEC1", alignItems: "center", justifyContent: "center" }, radioSelected: { borderColor: "#5E7D00" }, radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: "#5E7D00" }, note: { flexDirection: "row", alignItems: "flex-start", gap: 9, padding: 14, borderRadius: 16, backgroundColor: "#F4F8E8", marginTop: 24 }, noteText: { flex: 1, color: "#4A6410", fontSize: 11, lineHeight: 16, fontWeight: "700" }, security: { flexDirection: "row", gap: 8, alignItems: "center", paddingTop: 20 }, securityCopy: { flex: 1, color: "#697065", fontSize: 11, lineHeight: 16 }, footer: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingVertical: 15, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#E8ECE4", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, totalLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, total: { color: "#151B14", fontSize: 20, fontWeight: "900", marginTop: 2 }, confirmButton: { minHeight: 54, borderRadius: 17, paddingHorizontal: 15, backgroundColor: "#151B14", flexDirection: "row", alignItems: "center", gap: 7 }, confirmButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" }, missing: { color: "#697065", fontSize: 14, textAlign: "center" },
+  content: { paddingHorizontal: 20, paddingBottom: 132 }, topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, marginBottom: 30 }, backButton: { width: 43, height: 43, borderRadius: 15, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" }, topTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, topSpacer: { width: 43 }, eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.05 }, title: { color: "#151B14", fontSize: 31, lineHeight: 36, letterSpacing: -1.35, fontWeight: "900", marginTop: 7 }, intro: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 10 }, summaryCard: { marginTop: 24, padding: 17, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, summaryHeading: { flexDirection: "row", alignItems: "center", gap: 11 }, bagIcon: { width: 42, height: 42, borderRadius: 15, backgroundColor: "#ECF6CD", alignItems: "center", justifyContent: "center" }, summaryHeadingCopy: { flex: 1 }, store: { color: "#151B14", fontSize: 15, fontWeight: "900" }, subtitle: { color: "#697065", fontSize: 11, marginTop: 2 }, price: { color: "#151B14", fontSize: 18, fontWeight: "900" }, rule: { height: 1, backgroundColor: "#E8ECE4", marginVertical: 16 }, infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 12 }, infoCopy: { flex: 1 }, infoLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.65 }, infoValue: { color: "#151B14", fontSize: 13, lineHeight: 18, fontWeight: "800", marginTop: 3 }, sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", marginTop: 28 }, sectionCopy: { color: "#697065", fontSize: 12, lineHeight: 17, marginTop: 4 }, slotRow: { flexDirection: "row", gap: 8, marginTop: 13 }, slot: { backgroundColor: "#FFFFFF", borderColor: "#E8ECE4", borderRadius: 14, borderWidth: 1, flex: 1, minHeight: 42, alignItems: "center", justifyContent: "center" }, slotSelected: { backgroundColor: "#ECF6CD", borderColor: "#8DAF25" }, slotText: { color: "#697065", fontSize: 12, fontWeight: "900" }, slotTextSelected: { color: "#3B5000" }, methods: { gap: 10, marginTop: 15 }, methodCard: { minHeight: 73, flexDirection: "row", alignItems: "center", gap: 11, padding: 12, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, methodCardSelected: { borderColor: "#8DAF25", backgroundColor: "#F8FCEB" }, methodIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: "#F2F4EF", alignItems: "center", justifyContent: "center" }, methodIconSelected: { backgroundColor: "#D7F07C" }, methodCopy: { flex: 1 }, methodTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, methodDescription: { color: "#697065", fontSize: 10, lineHeight: 14, marginTop: 2 }, radio: { width: 21, height: 21, borderRadius: 11, borderWidth: 1.5, borderColor: "#C7CEC1", alignItems: "center", justifyContent: "center" }, radioSelected: { borderColor: "#5E7D00" }, radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: "#5E7D00" }, note: { flexDirection: "row", alignItems: "flex-start", gap: 9, padding: 14, borderRadius: 16, backgroundColor: "#F4F8E8", marginTop: 24 }, noteText: { flex: 1, color: "#4A6410", fontSize: 11, lineHeight: 16, fontWeight: "700" }, security: { flexDirection: "row", gap: 8, alignItems: "center", paddingTop: 20 }, securityCopy: { flex: 1, color: "#697065", fontSize: 11, lineHeight: 16 }, footer: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingVertical: 15, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#E8ECE4", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, totalLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, total: { color: "#151B14", fontSize: 20, fontWeight: "900", marginTop: 2 }, confirmButton: { minHeight: 54, borderRadius: 17, paddingHorizontal: 15, backgroundColor: "#151B14", flexDirection: "row", alignItems: "center", gap: 7 }, confirmButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" }, missing: { color: "#697065", fontSize: 14, textAlign: "center" },
 });

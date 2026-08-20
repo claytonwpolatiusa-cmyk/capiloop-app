@@ -16,6 +16,7 @@ type CatalogBag = {
   pickupEndTime: string;
   quantity: number;
   reserved: number;
+  status?: "active" | "sold_out" | "cancelled";
   co2Kg: number | string;
   imageUrl: string | null;
   galleryImageUrls?: string[];
@@ -79,13 +80,14 @@ function mapBagToOffer(bag: CatalogBag): Offer {
     distance: "Retirada no local",
     pickupWindow: formatPickupWindow(bag.pickupStartTime, bag.pickupEndTime),
     address: bag.partner.address,
-    stockLabel: remaining === 1 ? "Resta 1" : `Restam ${remaining}`,
+    stockLabel: remaining <= 0 || bag.status === "sold_out" ? "Esgotada hoje" : remaining === 1 ? "Resta 1" : `Restam ${remaining}`,
     expected: bag.expectedItems || "Itens surpresa selecionados pela loja no final do dia.",
     image,
     galleryImages: galleryImages.length > 0 ? galleryImages : [image],
     accent: accents[category],
     co2Kg: Number(bag.co2Kg),
     source: "live",
+    isAvailable: bag.status !== "sold_out" && remaining > 0,
   };
 }
 

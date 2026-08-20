@@ -23,6 +23,7 @@ export type Offer = {
   latitude?: number;
   longitude?: number;
   source?: "live" | "reference";
+  isAvailable?: boolean;
   reputation?: EstablishmentReputation;
 };
 
@@ -131,7 +132,7 @@ export const offers: Offer[] = [
     distance: "1,7 km",
     pickupWindow: "18h–19h",
     address: "Rua Saldanha Marinho, 587 · Centro",
-    stockLabel: "Resta 1",
+    stockLabel: "Esgotada hoje",
     expected: "Bolos, doces e preparos frescos da confeitaria.",
     image: require("../assets/images/offers/doces.jpg"),
     galleryImages: [
@@ -143,6 +144,7 @@ export const offers: Offer[] = [
     co2Kg: 2.8,
     latitude: -25.4367,
     longitude: -49.277,
+    isAvailable: false,
     reputation: {
       soldBags: 28,
       averageRating: 4.9,

@@ -77,6 +77,15 @@
 - [x] Permitir a escolha entre PIX, Apple Pay e cartão cadastrado antes do checkout.
 - [x] Conectar a escolha ao checkout e validar os estados de confirmação, cancelamento e erro.
 
+## Evolução da reserva, disponibilidade e favoritos
+
+- [x] Fixar o fluxo de reserva em retirada no local, sem opção de delivery nesta fase.
+- [x] Permitir selecionar um horário de retirada dentro da janela disponível antes do pagamento.
+- [x] Apresentar PIX, Apple Pay e cartão cadastrado ou novo cartão como opções de pagamento.
+- [x] Exibir estabelecimentos sem sacolas disponíveis em estado cinza e impedir sua abertura para reserva.
+- [x] Implementar favoritos persistentes para estabelecimentos e acesso rápido aos salvos.
+- [x] Validar os fluxos de retirada, indisponibilidade e favoritos.
+
 ## Redesenho da descoberta
 
 - [x] Simplificar a hierarquia visual da aba inicial e priorizar as sacolas disponíveis.
@@ -129,6 +138,8 @@
 - [x] Implementar avaliação de 0 a 5, quantidade de sacolas vendidas e classificação padronizada.
 - [x] Criar dez tipos de destaques padronizados de experiência sem atribuí-los a pessoas específicas.
 - [x] Exibir reputação de forma transparente nos cards de oferta e validar estados sem dados suficientes.
+- [x] Exibir nota de 0 a 5 estrelas no detalhe de cada estabelecimento.
+- [x] Mostrar a quantidade de sacolas vendidas no detalhe somente após 40 vendas.
 
 ## Brand book e conteúdo de lançamento
 

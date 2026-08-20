@@ -22,7 +22,7 @@ export default function BagScreen() {
       return <Pressable onPress={() => router.push({ pathname: "/reservation/[id]", params: { id: item.id } })} style={({ pressed }) => [styles.reservationCard, pressed && { opacity: 0.72 }]}>
         <View style={styles.statusRow}><View style={[styles.statusDot, isPending && styles.pendingDot]} /><Text style={styles.statusText}>{isPending ? "PAGAMENTO EM ANÁLISE" : "RESERVADA"}</Text></View>
         <Text style={styles.store}>{offer.store}</Text><Text style={styles.bagType}>{offer.subtitle}</Text><View style={styles.divider} />
-        <View style={styles.pickupRow}><MaterialIcons name="schedule" size={20} color="#5E7D00" /><View style={styles.pickupInfo}><Text style={styles.pickupTitle}>Retire hoje, {offer.pickupWindow}</Text><Text style={styles.pickupAddress}>{offer.address}</Text></View></View>
+        <View style={styles.pickupRow}><MaterialIcons name="schedule" size={20} color="#5E7D00" /><View style={styles.pickupInfo}><Text style={styles.pickupTitle}>Retire hoje às {item.pickupTime?.replace(":", "h") ?? offer.pickupWindow}</Text><Text style={styles.pickupAddress}>{offer.address}</Text></View></View>
         <View style={styles.codeBox}><Text style={styles.codeLabel}>CÓDIGO DE RETIRADA</Text><Text style={styles.code}>{item.code}</Text></View>
       </Pressable>;
     }}

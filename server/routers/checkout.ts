@@ -13,7 +13,10 @@ import {
 } from "../_core/mercadopago";
 import { protectedProcedure, router } from "../_core/trpc";
 
-const checkoutInput = z.object({ bagId: z.number().int().positive() });
+const checkoutInput = z.object({
+  bagId: z.number().int().positive(),
+  pickupTime: z.string().regex(/^\d{2}:\d{2}$/, "Escolha um horário de retirada válido."),
+});
 const cardInput = checkoutInput.extend({
   cardToken: z.string().min(8).max(512),
   paymentMethodId: z.string().min(2).max(32),
@@ -29,7 +32,15 @@ function transactionStatus(status: string) {
   return "pending" as const;
 }
 
-async function createReservation(userId: number, bagId: number): Promise<CreatedReservation> {
+function timeToMinutes(value: string) {
+  const match = value.match(/^(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
+}
+
+async function createReservation(userId: number, bagId: number, pickupTime: string): Promise<CreatedReservation> {
   const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Banco de dados indisponível." });
 
@@ -46,6 +57,12 @@ async function createReservation(userId: number, bagId: number): Promise<Created
   if (entry.bag.reserved >= entry.bag.quantity) {
     throw new TRPCError({ code: "CONFLICT", message: "Esta sacola acabou de esgotar." });
   }
+  const pickupStart = timeToMinutes(entry.bag.pickupStartTime);
+  const pickupEnd = timeToMinutes(entry.bag.pickupEndTime);
+  const selectedPickup = timeToMinutes(pickupTime);
+  if (pickupStart === null || pickupEnd === null || selectedPickup === null || selectedPickup < pickupStart || selectedPickup > pickupEnd) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Escolha um horário dentro da janela de retirada da loja." });
+  }
 
   const code = `CPL-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const inserted = await db.insert(reservations).values({
@@ -53,7 +70,7 @@ async function createReservation(userId: number, bagId: number): Promise<Created
     bagId,
     code,
     status: "pending",
-    pickupTime: entry.bag.pickupStartTime,
+    pickupTime,
   });
   await db
     .update(bags)
@@ -121,7 +138,7 @@ export const checkoutRouter = router({
 
   startPix: protectedProcedure.input(checkoutInput).mutation(async ({ ctx, input }) => {
     if (!ctx.user.email) throw new TRPCError({ code: "BAD_REQUEST", message: "Adicione um e-mail à sua conta para pagar com PIX." });
-    const reservation = await createReservation(ctx.user.id, input.bagId);
+    const reservation = await createReservation(ctx.user.id, input.bagId, input.pickupTime);
     try {
       const payment = await createPixPayment({
         amount: reservation.price,
@@ -140,7 +157,7 @@ export const checkoutRouter = router({
 
   startCard: protectedProcedure.input(cardInput).mutation(async ({ ctx, input }) => {
     if (!ctx.user.email) throw new TRPCError({ code: "BAD_REQUEST", message: "Adicione um e-mail à sua conta para pagar com cartão." });
-    const reservation = await createReservation(ctx.user.id, input.bagId);
+    const reservation = await createReservation(ctx.user.id, input.bagId, input.pickupTime);
     try {
       const payment = await createCardPayment({
         amount: reservation.price,
@@ -163,7 +180,7 @@ export const checkoutRouter = router({
 
   startCheckoutPro: protectedProcedure.input(checkoutInput).mutation(async ({ ctx, input }) => {
     if (!ctx.user.email) throw new TRPCError({ code: "BAD_REQUEST", message: "Adicione um e-mail à sua conta para pagar." });
-    const reservation = await createReservation(ctx.user.id, input.bagId);
+    const reservation = await createReservation(ctx.user.id, input.bagId, input.pickupTime);
     try {
       const preference = await createCheckoutPreference({
         amount: reservation.price,

@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { Router } from "express";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
@@ -281,11 +281,11 @@ export function registerPartnerRoutes(app: Router) {
         .select({ bag: bags, partner: partners })
         .from(bags)
         .innerJoin(partners, eq(bags.partnerId, partners.id))
-        .where(eq(bags.status, "active"))
+        .where(inArray(bags.status, ["active", "sold_out"]))
         .orderBy(desc(bags.createdAt));
       res.json({
         bags: result
-          .filter(({ bag, partner }) => partner.status === "approved" && bag.reserved < bag.quantity)
+          .filter(({ partner }) => partner.status === "approved")
           .map(({ bag, partner }) => ({ ...normalizeBag(bag), partner: toPartnerJson(partner) })),
       });
     } catch (error) {
