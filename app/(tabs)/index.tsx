@@ -32,7 +32,7 @@ export default function DiscoverScreen() {
   const favoriteBagCount = useMemo(() => favoriteAlerts.reduce((total, alert) => total + alert.availableBags, 0), [favoriteAlerts]);
 
   return (
-    <ScreenContainer className="flex-1" containerClassName="bg-background">
+    <ScreenContainer edges={["top", "left", "right"]} className="flex-1" containerClassName="bg-background" safeAreaClassName="bg-background">
       <View style={styles.screen}>
         <FlatList
           data={displayedOffers}
@@ -180,9 +180,9 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, width: "100%", maxWidth: 560, alignSelf: "center" },
-  content: { paddingBottom: 132, flexGrow: 1, paddingTop: 4 },
-  topbar: { marginHorizontal: 20, marginTop: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  screen: { flex: 1, minHeight: 0, width: "100%", maxWidth: 560, alignSelf: "center" },
+  content: { paddingBottom: 132, flexGrow: 1, paddingTop: 14 },
+  topbar: { marginHorizontal: 20, marginTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   iconButton: { height: 42, width: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", shadowColor: "#182314", shadowOpacity: 0.04, shadowRadius: 7, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
   pressed: { opacity: 0.6 },
   locationRow: { alignSelf: "center", flexDirection: "row", alignItems: "center", marginTop: 17, gap: 8, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18, backgroundColor: "#F0F5E3" },

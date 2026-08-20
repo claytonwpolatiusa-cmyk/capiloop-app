@@ -122,6 +122,7 @@
 - [x] Fazer a barra de “Mais perto de você” responder ao arraste e revelar o catálogo ao ser recolhida.
 - [x] Adicionar uma galeria de três fotos do estabelecimento na experiência de oferta.
 - [x] Validar o layout, a rolagem e a interação de arraste em orientação retrato.
+- [x] Corrigir o enquadramento superior para respeitar a área segura sem deslocar o cabeçalho e a localização.
 
 ## Ordenação de ofertas
 
