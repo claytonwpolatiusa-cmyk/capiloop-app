@@ -17,6 +17,7 @@ export type Offer = {
   stockLabel: string;
   expected: string;
   image: ImageSourcePropType;
+  galleryImages?: ImageSourcePropType[];
   accent: string;
   co2Kg: number;
   latitude?: number;
@@ -46,6 +47,11 @@ export const offers: Offer[] = [
     stockLabel: "Resta 1",
     expected: "Pães, folhados, doces e itens de vitrine do dia.",
     image: require("../assets/images/offers/padaria.jpg"),
+    galleryImages: [
+      require("../assets/images/offers/padaria.jpg"),
+      require("../assets/images/offers/cafe.jpg"),
+      require("../assets/images/offers/doces.jpg"),
+    ],
     accent: "#F5BC73",
     co2Kg: 2.2,
     latitude: -25.4303,
@@ -70,6 +76,11 @@ export const offers: Offer[] = [
     stockLabel: "Resta 2",
     expected: "Salgados, fatias doces e acompanhamentos do balcão.",
     image: require("../assets/images/offers/cafe.jpg"),
+    galleryImages: [
+      require("../assets/images/offers/cafe.jpg"),
+      require("../assets/images/offers/padaria.jpg"),
+      require("../assets/images/offers/doces.jpg"),
+    ],
     accent: "#DEAD88",
     co2Kg: 2.6,
     latitude: -25.4254,
@@ -94,6 +105,11 @@ export const offers: Offer[] = [
     stockLabel: "Últimas 3",
     expected: "Frutas, legumes e verduras em perfeito estado.",
     image: require("../assets/images/offers/mercado.jpeg"),
+    galleryImages: [
+      require("../assets/images/offers/mercado.jpeg"),
+      require("../assets/images/offers/padaria.jpg"),
+      require("../assets/images/offers/cafe.jpg"),
+    ],
     accent: "#A5DF00",
     co2Kg: 3.1,
     latitude: -25.4407,
@@ -118,6 +134,11 @@ export const offers: Offer[] = [
     stockLabel: "Resta 1",
     expected: "Bolos, doces e preparos frescos da confeitaria.",
     image: require("../assets/images/offers/doces.jpg"),
+    galleryImages: [
+      require("../assets/images/offers/doces.jpg"),
+      require("../assets/images/offers/cafe.jpg"),
+      require("../assets/images/offers/padaria.jpg"),
+    ],
     accent: "#E7B5CE",
     co2Kg: 2.8,
     latitude: -25.4367,

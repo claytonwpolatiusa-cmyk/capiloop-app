@@ -100,6 +100,14 @@
 - [x] Aplicar o novo sistema de mascote em posições estratégicas sem sobrecarregar as telas.
 - [x] Validar contraste, consistência e legibilidade da marca em todo o aplicativo.
 
+## Ajustes de responsividade e descoberta
+
+- [x] Corrigir margens, largura máxima e áreas seguras para a interface permanecer bem posicionada em telas móveis.
+- [x] Tornar a tela Descobrir integralmente rolável, com continuidade visual do catálogo abaixo da seleção inicial.
+- [x] Fazer a barra de “Mais perto de você” responder ao arraste e revelar o catálogo ao ser recolhida.
+- [x] Adicionar uma galeria de três fotos do estabelecimento na experiência de oferta.
+- [x] Validar o layout, a rolagem e a interação de arraste em orientação retrato.
+
 ## Ordenação de ofertas
 
 - [x] Implementar ordenação das sacolas por menor distância.

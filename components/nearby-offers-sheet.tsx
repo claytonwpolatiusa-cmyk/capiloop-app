@@ -28,15 +28,18 @@ export function NearbyOffersSheet({ offers, isLoading, error, onDismiss }: Nearb
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gesture) => gesture.dy > 5 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-        onPanResponderMove: (_event, gesture) => translateY.setValue(Math.max(0, gesture.dy)),
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: (_event, gesture) => gesture.dy > 2 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderGrant: () => translateY.stopAnimation(),
+        onPanResponderMove: (_event, gesture) => translateY.setValue(Math.min(sheetHeight, Math.max(0, gesture.dy))),
         onPanResponderRelease: (_event, gesture) => {
-          if (gesture.dy > 92 || gesture.vy > 0.9) {
+          if (gesture.dy > Math.max(72, sheetHeight * 0.18) || gesture.vy > 0.55) {
             dismiss();
             return;
           }
           Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
         },
+        onPanResponderTerminationRequest: () => false,
         onPanResponderTerminate: () => Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start(),
       }),
     [sheetHeight, translateY],
@@ -44,7 +47,7 @@ export function NearbyOffersSheet({ offers, isLoading, error, onDismiss }: Nearb
 
   return (
     <Animated.View style={[styles.sheet, { height: sheetHeight, transform: [{ translateY }] }]} accessibilityViewIsModal>
-      <View {...panResponder.panHandlers} style={styles.dragArea} accessibilityLabel="Arraste para baixo para continuar explorando">
+      <View {...panResponder.panHandlers} style={styles.dragArea} accessibilityLabel="Arraste a barra para baixo para continuar explorando">
         <View style={styles.handle} />
         <Text style={styles.dragHint}>Arraste para baixo para explorar</Text>
       </View>
@@ -110,7 +113,7 @@ function NearbyOfferCard({ offer }: { offer: Offer }) {
 
 const styles = StyleSheet.create({
   sheet: { position: "absolute", left: 0, right: 0, bottom: 0, backgroundColor: "#FFFFFF", borderTopLeftRadius: 34, borderTopRightRadius: 34, paddingTop: 8, shadowColor: "#151B14", shadowOpacity: 0.18, shadowRadius: 26, shadowOffset: { width: 0, height: -8 }, elevation: 18, zIndex: 20 },
-  dragArea: { alignItems: "center", minHeight: 36, justifyContent: "flex-start" },
+  dragArea: { alignItems: "center", minHeight: 48, justifyContent: "flex-start", paddingTop: 2 },
   handle: { width: 42, height: 5, borderRadius: 99, backgroundColor: "#DDE2D6", marginTop: 2 },
   dragHint: { color: "#8C9388", fontSize: 10, fontWeight: "700", marginTop: 5 },
   header: { marginHorizontal: 20, marginTop: 5, marginBottom: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },

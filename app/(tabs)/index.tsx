@@ -148,7 +148,16 @@ export default function DiscoverScreen() {
               {error ? <Pressable onPress={() => void refresh()} style={styles.retry}><Text style={styles.retryText}>Tentar novamente</Text></Pressable> : null}
             </View>
           }
-          ListFooterComponent={displayedOffers.length > 0 ? <View style={styles.impactCard}><View style={styles.impactIcon}><MaterialIcons name="eco" size={18} color="#253000" /></View><View style={styles.impactText}><Text style={styles.impactValue}>Seu impacto até agora</Text><Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas · {impact.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂ evitados</Text></View><MaterialIcons name="arrow-forward" size={18} color="#5E7D00" /></View> : null}
+          ListFooterComponent={displayedOffers.length > 0 ? (
+            <View style={styles.footer}>
+              <View style={styles.impactCard}><View style={styles.impactIcon}><MaterialIcons name="eco" size={18} color="#253000" /></View><View style={styles.impactText}><Text style={styles.impactValue}>Seu impacto até agora</Text><Text style={styles.impactCopy}>{impact.savedBags} sacolas salvas · {impact.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂ evitados</Text></View><MaterialIcons name="arrow-forward" size={18} color="#5E7D00" /></View>
+              <Pressable onPress={() => router.push("/(tabs)/explore")} accessibilityRole="button" accessibilityLabel="Explorar ofertas no mapa" style={({ pressed }) => [styles.exploreMore, pressed && styles.pressed]}>
+                <View style={styles.exploreMoreIcon}><MaterialIcons name="map" size={19} color="#253000" /></View>
+                <View style={styles.exploreMoreCopy}><Text style={styles.exploreMoreTitle}>Quer ampliar a busca?</Text><Text style={styles.exploreMoreText}>Veja todas as ofertas no mapa.</Text></View>
+                <MaterialIcons name="arrow-forward" size={18} color="#4A6410" />
+              </Pressable>
+            </View>
+          ) : null}
         />
         {isNearbySheetVisible ? <NearbyOffersSheet offers={nearbyOffers} isLoading={isLoading} error={error} onDismiss={() => setIsNearbySheetVisible(false)} /> : null}
       </View>
@@ -157,8 +166,8 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: { paddingBottom: 24, flexGrow: 1 },
+  screen: { flex: 1, width: "100%", maxWidth: 560, alignSelf: "center" },
+  content: { paddingBottom: 132, flexGrow: 1, paddingTop: 4 },
   topbar: { marginHorizontal: 20, marginTop: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   iconButton: { height: 42, width: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", shadowColor: "#182314", shadowOpacity: 0.04, shadowRadius: 7, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
   pressed: { opacity: 0.6 },
@@ -179,15 +188,15 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, minHeight: 48, color: "#151B14", fontSize: 14, fontWeight: "700", paddingVertical: 0 },
   clearSearch: { height: 30, width: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#F2F4F0" },
   discoveryHeader: { marginHorizontal: 20, marginTop: 26, marginBottom: 13, alignItems: "center" },
-  sectionHeader: { marginHorizontal: 20, marginTop: 25, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionHeader: { marginHorizontal: 20, marginTop: 25, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", letterSpacing: -0.6 },
   availableTitle: { color: "#151B14", fontSize: 21, fontWeight: "900", letterSpacing: -0.85 },
   sectionSubtitle: { color: "#697065", fontSize: 12, marginTop: 3 },
   countText: { color: "#4A6410", fontSize: 11, fontWeight: "900", borderRadius: 10, backgroundColor: "#EEF6D0", paddingHorizontal: 9, paddingVertical: 6, maxWidth: 88, textAlign: "right" },
   sortBar: { marginHorizontal: 20, padding: 5, borderRadius: 14, backgroundColor: "#F2F4F0", flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sortLabel: { color: "#697065", fontSize: 11, fontWeight: "800", marginLeft: 8 },
-  sortOptions: { flexDirection: "row", gap: 4 },
-  sortOption: { minHeight: 34, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, borderRadius: 10 },
+  sortOptions: { flex: 1, flexDirection: "row", gap: 3, justifyContent: "flex-end" },
+  sortOption: { flex: 1, minHeight: 34, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingHorizontal: 4, borderRadius: 10 },
   sortOptionActive: { backgroundColor: "#FFFFFF", shadowColor: "#1B2417", shadowOpacity: 0.08, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
   sortOptionText: { color: "#697065", fontSize: 11, fontWeight: "800" },
   sortOptionTextActive: { color: "#253000", fontWeight: "900" },
@@ -205,11 +214,17 @@ const styles = StyleSheet.create({
   reopenText: { color: "#697065", fontSize: 10, marginTop: 2 },
   referenceNotice: { marginHorizontal: 20, marginTop: 2, padding: 11, gap: 8, borderRadius: 14, backgroundColor: "#F4F8E8", flexDirection: "row", alignItems: "center" },
   referenceText: { flex: 1, color: "#4E5D21", fontSize: 11, lineHeight: 16, fontWeight: "600" },
+  footer: { paddingBottom: 8 },
   impactCard: { marginHorizontal: 20, marginTop: 8, borderRadius: 19, padding: 14, backgroundColor: "#EDF8C8", flexDirection: "row", alignItems: "center", gap: 10 },
   impactIcon: { height: 34, width: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#C9EC64" },
   impactText: { flex: 1 },
   impactValue: { color: "#253000", fontSize: 12, fontWeight: "900" },
   impactCopy: { color: "#5A6D1C", fontSize: 10, fontWeight: "700", marginTop: 2 },
+  exploreMore: { marginHorizontal: 20, marginTop: 13, borderRadius: 19, padding: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", flexDirection: "row", alignItems: "center", gap: 11 },
+  exploreMoreIcon: { width: 38, height: 38, borderRadius: 14, backgroundColor: "#E7F4C8", alignItems: "center", justifyContent: "center" },
+  exploreMoreCopy: { flex: 1 },
+  exploreMoreTitle: { color: "#151B14", fontSize: 13, fontWeight: "900" },
+  exploreMoreText: { color: "#697065", fontSize: 11, marginTop: 2 },
   empty: { alignItems: "center", paddingHorizontal: 42, paddingVertical: 34, gap: 8 },
   emptyTitle: { color: "#151B14", fontSize: 16, fontWeight: "900", marginTop: 4 },
   emptyText: { color: "#697065", fontSize: 12, lineHeight: 18, textAlign: "center" },

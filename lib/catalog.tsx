@@ -18,6 +18,7 @@ type CatalogBag = {
   reserved: number;
   co2Kg: number | string;
   imageUrl: string | null;
+  galleryImageUrls?: string[];
   partner: { businessName: string; address: string };
 };
 
@@ -63,6 +64,11 @@ function formatPickupWindow(startValue: string, endValue: string) {
 function mapBagToOffer(bag: CatalogBag): Offer {
   const category = normalizeCategory(bag.category);
   const remaining = Math.max(0, Number(bag.quantity) - Number(bag.reserved));
+  const image = bag.imageUrl ? { uri: bag.imageUrl } : fallbackImages[category];
+  const galleryImages = (bag.galleryImageUrls ?? [])
+    .filter((url): url is string => typeof url === "string" && url.length > 0)
+    .slice(0, 3)
+    .map((uri) => ({ uri }));
   return {
     id: String(bag.id),
     store: bag.partner.businessName,
@@ -75,7 +81,8 @@ function mapBagToOffer(bag: CatalogBag): Offer {
     address: bag.partner.address,
     stockLabel: remaining === 1 ? "Resta 1" : `Restam ${remaining}`,
     expected: bag.expectedItems || "Itens surpresa selecionados pela loja no final do dia.",
-    image: bag.imageUrl ? { uri: bag.imageUrl } : fallbackImages[category],
+    image,
+    galleryImages: galleryImages.length > 0 ? galleryImages : [image],
     accent: accents[category],
     co2Kg: Number(bag.co2Kg),
     source: "live",
