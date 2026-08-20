@@ -84,6 +84,14 @@
 - [x] Melhorar a apresentação de cards, estados e feedbacks da descoberta.
 - [x] Validar a navegação e a consistência visual do novo fluxo inicial.
 
+## Redesenho minimalista da descoberta
+
+- [x] Definir a direção visual clean, centralizada e colorida a partir da referência aprovada.
+- [x] Criar elementos 3D exclusivos da capivara CapiLoop para a nova experiência inicial.
+- [x] Redesenhar o topo da descoberta com composição minimalista, localização e busca.
+- [x] Implementar uma camada de sacolas próximas que incentive a primeira reserva e possa ser deslizada para revelar o catálogo.
+- [x] Validar a nova hierarquia, os gestos e a responsividade em orientação retrato.
+
 ## Ordenação de ofertas
 
 - [x] Implementar ordenação das sacolas por menor distância.

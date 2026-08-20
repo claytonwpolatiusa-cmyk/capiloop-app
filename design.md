@@ -18,6 +18,12 @@ O desenho considera a orientação **vertical 9:16**, uso com uma mão e padrõe
 | Tipografia | Sans-serif nativa em pesos semibold e bold, com títulos compactos e preços grandes. |
 | Ilustração | Capivara minimalista, calorosa e contemporânea; nunca infantil ou excessivamente decorativa. |
 
+## Direção revisada da descoberta
+
+A tela **Descobrir** passa a usar uma composição ainda mais limpa e centralizada. O topo traz a localização em um chip discreto, um cartão editorial com fundo verde-claro e a capivara CapiLoop em 3D como elemento de reconhecimento. A ilustração permanece funcional: ela sustenta a mensagem de resgate de alimentos sem competir com a busca ou com a ação de reserva.
+
+Ao abrir o aplicativo, uma camada arredondada de **“Mais perto de você”** aparece sobre o catálogo, priorizando até três sacolas com menor distância informada. A pessoa pode tocar em uma sacola para abrir o detalhe ou arrastar a camada para baixo — também há o botão “Continuar” — para seguir pela lista completa de lojas. Depois de fechada, a camada permanece acessível por um atalho compacto. Esta decisão favorece a primeira reserva, mas preserva uma rota direta de exploração e o uso com uma mão.
+
 ## Lista de telas
 
 | Tela | Conteúdo principal | Função central |
