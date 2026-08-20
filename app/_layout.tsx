@@ -19,6 +19,7 @@ export default function RootLayout() {
             <Stack.Screen name="offer/confirm" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
             <Stack.Screen name="reservation/[id]" options={{ animation: "fade" }} />
             <Stack.Screen name="checkout/result" options={{ animation: "fade" }} />
+            <Stack.Screen name="help/index" options={{ animation: "slide_from_right" }} />
           </Stack>
         </CatalogProvider>
       </CapiLoopProvider>

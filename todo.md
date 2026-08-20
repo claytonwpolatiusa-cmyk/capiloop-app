@@ -118,7 +118,7 @@
 - [x] Verificar a conexão e o estado atual do perfil do Instagram.
 - [x] Preparar nome, @, bio, logo e conteúdo inaugural da CapiLoop.
 - [x] Confirmar alterações de perfil, arquivamento dos posts existentes e publicação inicial.
-- [ ] Aplicar a nova identidade e publicar o primeiro post da CapiLoop.
+- [x] Aplicar a nova identidade e publicar o primeiro post da CapiLoop.
 
 ## Revisão da publicação inaugural
 
@@ -162,3 +162,10 @@
 - [x] Criar book institucional em PDF para convite de restaurantes, cafés, padarias e mercados.
 - [x] Incluir roteiro prático de captação e início de relacionamento com estabelecimentos.
 - [x] Preparar a entrega do material ao e-mail indicado pelo usuário, se houver canal de envio disponível.
+
+## Central de Ajuda
+
+- [x] Criar tela de Central de Ajuda com categorias de problema e orientações rápidas.
+- [x] Implementar a seleção guiada do assunto e o encaminhamento por e-mail ao suporte.
+- [x] Adicionar acesso à Central de Ajuda no perfil do cliente.
+- [x] Validar o fluxo no aplicativo e os cenários sem cliente de e-mail disponível.
