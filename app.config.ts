@@ -27,7 +27,7 @@ const env = {
   appSlug: "capiloop",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "/manus-storage/capiloop-icon-mascot-3d_6a9e2b0a.png",
+  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663885056165/bVQXbmiWiNBTtGWi.png",
   scheme: "capiloop",
   iosBundleId: bundleId,
   androidPackage: bundleId,

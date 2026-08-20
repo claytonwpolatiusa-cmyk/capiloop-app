@@ -28,6 +28,10 @@ Ao abrir o aplicativo, uma camada arredondada de **“Mais perto de você”** a
 
 A capivara com sacola torna-se o principal ativo de reconhecimento da CapiLoop. O ícone de aplicativo e a marca compacta utilizam a versão frontal do mascote em fundo verde-lima. Dentro do produto, ela aparece apenas em quatro pontos de alto significado: na abertura da descoberta, para convidar à primeira reserva; no estado de sacola vazia, para orientar o retorno ao catálogo; no cartão de impacto, como reforço de recompensa; e na marca compacta das telas. Variações futuras precisam manter os mesmos âncoras de identidade — pelo marrom-cacau, olhos pretos brilhantes, sacola grafite e alças creme — e uma composição limpa com área de respiro.
 
+Os arquivos de mascote usados sobre superfícies do produto devem ter **canal alfa real**: qualquer fundo técnico de chave de cor é removido na preparação do ativo, para que o personagem se integre ao fundo sem retângulos ou bordas de cor.
+
+Enquanto uma variação não cumprir esse critério visual, a interface reutiliza o ativo mestre da capivara 3D em escalas e enquadramentos diferentes. A consistência do personagem prevalece sobre aumentar o número de ilustrações.
+
 ## Lista de telas
 
 | Tela | Conteúdo principal | Função central |

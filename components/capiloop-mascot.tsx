@@ -1,11 +1,13 @@
 import { Image } from "expo-image";
 import type { ImageStyle, StyleProp } from "react-native";
 
+const MASTER_MASCOT_SOURCE = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663885056165/bVQXbmiWiNBTtGWi.png";
+
 const mascotSources = {
-  icon: "/manus-storage/capiloop-icon-mascot-3d_6a9e2b0a.png",
-  nearby: "/manus-storage/capiloop-mascot-nearby-3d_9ee45650.png",
-  emptyBag: "/manus-storage/capiloop-mascot-empty-bag-3d_ab4b63c5.png",
-  impact: "/manus-storage/capiloop-mascot-impact-3d_5160699b.png",
+  icon: MASTER_MASCOT_SOURCE,
+  nearby: MASTER_MASCOT_SOURCE,
+  emptyBag: MASTER_MASCOT_SOURCE,
+  impact: MASTER_MASCOT_SOURCE,
 } as const;
 
 export type CapiLoopMascotVariant = keyof typeof mascotSources;
