@@ -10,8 +10,9 @@ export type Reservation = {
   code: string;
   createdAt: string;
   paymentStatus: "pending" | "confirmed" | "failed";
+  paymentMethod?: string;
   pickupTime?: string;
-  offerSnapshot?: Pick<Offer, "store" | "subtitle" | "pickupWindow" | "address">;
+  offerSnapshot?: Pick<Offer, "store" | "subtitle" | "pickupWindow" | "address" | "price">;
 };
 
 export type Impact = ImpactTotals;
@@ -22,7 +23,7 @@ type CapiLoopContextValue = {
   favoriteStores: string[];
   isReady: boolean;
   reserveOffer: (offer: Offer, pickupTime?: string) => Promise<Reservation>;
-  recordRemoteReservation: (input: { id: string; offer: Offer; code: string; pickupTime?: string }) => Promise<Reservation>;
+  recordRemoteReservation: (input: { id: string; offer: Offer; code: string; pickupTime?: string; paymentMethod?: string }) => Promise<Reservation>;
   updateRemoteReservationStatus: (id: string, paymentStatus: Reservation["paymentStatus"]) => Promise<void>;
   isFavoriteStore: (store: string) => boolean;
   toggleFavoriteStore: (store: string) => Promise<void>;
@@ -33,7 +34,7 @@ const initialImpact: Impact = { savedBags: 4, co2Kg: 10.4, savings: 126.2 };
 const CapiLoopContext = createContext<CapiLoopContextValue | null>(null);
 
 function createOfferSnapshot(offer: Offer): Reservation["offerSnapshot"] {
-  return { store: offer.store, subtitle: offer.subtitle, pickupWindow: offer.pickupWindow, address: offer.address };
+  return { store: offer.store, subtitle: offer.subtitle, pickupWindow: offer.pickupWindow, address: offer.address, price: offer.price };
 }
 
 export function CapiLoopProvider({ children }: { children: ReactNode }) {
@@ -72,10 +73,10 @@ export function CapiLoopProvider({ children }: { children: ReactNode }) {
     return reservation;
   }, [favoriteStores, impact, persist, reservations]);
 
-  const recordRemoteReservation = useCallback(async ({ id, offer, code, pickupTime }: { id: string; offer: Offer; code: string; pickupTime?: string }) => {
+  const recordRemoteReservation = useCallback(async ({ id, offer, code, pickupTime, paymentMethod }: { id: string; offer: Offer; code: string; pickupTime?: string; paymentMethod?: string }) => {
     const existing = reservations.find((reservation) => reservation.id === id);
     if (existing) return existing;
-    const reservation: Reservation = { id, offerId: offer.id, code, createdAt: new Date().toISOString(), paymentStatus: "pending", pickupTime, offerSnapshot: createOfferSnapshot(offer) };
+    const reservation: Reservation = { id, offerId: offer.id, code, createdAt: new Date().toISOString(), paymentStatus: "pending", paymentMethod, pickupTime, offerSnapshot: createOfferSnapshot(offer) };
     const nextReservations = [reservation, ...reservations];
     setReservations(nextReservations);
     await persist(nextReservations, impact, favoriteStores);

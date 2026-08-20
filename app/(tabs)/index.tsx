@@ -14,9 +14,10 @@ import { useCatalog } from "@/lib/catalog";
 import { filterOffersByStore } from "@/lib/offer-search";
 import { sortOffers, type OfferSort } from "@/lib/offer-sort";
 import { getNearbyOffers } from "@/lib/nearby-offers";
+import { getFavoriteAvailabilityAlerts } from "@/lib/favorite-alerts";
 
 export default function DiscoverScreen() {
-  const { impact } = useCapiLoop();
+  const { impact, favoriteStores } = useCapiLoop();
   const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
   const [selectedCategory, setSelectedCategory] = useState<OfferCategory | "Todas">("Todas");
   const [sortBy, setSortBy] = useState<OfferSort>("distance");
@@ -27,6 +28,8 @@ export default function DiscoverScreen() {
     [offers, selectedCategory, sortBy, storeQuery],
   );
   const nearbyOffers = useMemo(() => getNearbyOffers(offers), [offers]);
+  const favoriteAlerts = useMemo(() => getFavoriteAvailabilityAlerts(offers, favoriteStores), [favoriteStores, offers]);
+  const favoriteBagCount = useMemo(() => favoriteAlerts.reduce((total, alert) => total + alert.availableBags, 0), [favoriteAlerts]);
 
   return (
     <ScreenContainer className="flex-1" containerClassName="bg-background">
@@ -106,6 +109,17 @@ export default function DiscoverScreen() {
                   </Pressable>
                 )}
               />
+
+              {favoriteAlerts.length > 0 ? (
+                <Pressable onPress={() => router.push("/favorites")} accessibilityRole="button" accessibilityLabel="Ver novas sacolas das lojas favoritada" style={({ pressed }) => [styles.favoriteAlert, pressed && styles.pressed]}>
+                  <View style={styles.favoriteAlertIcon}><MaterialIcons name="favorite" size={18} color="#9A2548" /></View>
+                  <View style={styles.favoriteAlertCopy}>
+                    <Text style={styles.favoriteAlertTitle}>{favoriteBagCount === 1 ? "Nova sacola em uma loja favorita" : `${favoriteBagCount} sacolas em lojas favoritas`}</Text>
+                    <Text style={styles.favoriteAlertText}>{favoriteAlerts.length === 1 ? `${favoriteAlerts[0].store} acabou de ficar disponível.` : "Uma seleção que você salvou está disponível agora."}</Text>
+                  </View>
+                  <MaterialIcons name="arrow-forward" size={19} color="#9A2548" />
+                </Pressable>
+              ) : null}
 
               {!isNearbySheetVisible ? (
                 <Pressable onPress={() => setIsNearbySheetVisible(true)} style={({ pressed }) => [styles.reopenNearby, pressed && styles.pressed]} accessibilityLabel="Mostrar sacolas próximas">
@@ -188,6 +202,11 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, minHeight: 48, color: "#151B14", fontSize: 14, fontWeight: "700", paddingVertical: 0 },
   clearSearch: { height: 30, width: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#F2F4F0" },
   discoveryHeader: { marginHorizontal: 20, marginTop: 26, marginBottom: 13, alignItems: "center" },
+  favoriteAlert: { marginHorizontal: 20, marginTop: 18, padding: 13, borderRadius: 19, flexDirection: "row", alignItems: "center", gap: 11, backgroundColor: "#FFF3F5", borderWidth: 1, borderColor: "#F3D2DC" },
+  favoriteAlertIcon: { height: 38, width: 38, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#FFE0E8" },
+  favoriteAlertCopy: { flex: 1 },
+  favoriteAlertTitle: { color: "#5F1B31", fontSize: 13, fontWeight: "900" },
+  favoriteAlertText: { color: "#8A5264", fontSize: 11, lineHeight: 15, marginTop: 2 },
   sectionHeader: { marginHorizontal: 20, marginTop: 25, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", letterSpacing: -0.6 },
   availableTitle: { color: "#151B14", fontSize: 21, fontWeight: "900", letterSpacing: -0.85 },

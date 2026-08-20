@@ -85,6 +85,8 @@
 - [x] Exibir estabelecimentos sem sacolas disponíveis em estado cinza e impedir sua abertura para reserva.
 - [x] Implementar favoritos persistentes para estabelecimentos e acesso rápido aos salvos.
 - [x] Validar os fluxos de retirada, indisponibilidade e favoritos.
+- [x] Exibir um alerta visual na descoberta quando uma loja favoritada tiver novas sacolas disponíveis.
+- [x] Criar animação de sucesso e confirmação de pedido com informações completas após o pagamento.
 
 ## Redesenho da descoberta
 

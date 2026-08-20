@@ -22,6 +22,12 @@ const paymentMethods: Array<{ id: PaymentMethod; label: string; description: str
   { id: "card", label: "Cartão de crédito", description: "Use um cartão salvo ou cadastre outro no Mercado Pago", icon: "credit-card" },
 ];
 
+const paymentMethodLabels: Record<PaymentMethod, string> = {
+  pix: "PIX",
+  "apple-pay": "Apple Pay",
+  card: "Cartão de crédito",
+};
+
 export default function ConfirmReservationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getOffer, isLoading } = useCatalog();
@@ -70,7 +76,7 @@ export default function ConfirmReservationScreen() {
       const client = createTRPCClient();
       if (selectedMethod === "pix") {
         const result = await client.checkout.startPix.mutate({ bagId, pickupTime });
-        await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code, pickupTime });
+        await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code, pickupTime, paymentMethod: paymentMethodLabels[selectedMethod] });
         if (result.payment.ticketUrl) {
           await WebBrowser.openBrowserAsync(result.payment.ticketUrl);
         } else {
@@ -80,7 +86,7 @@ export default function ConfirmReservationScreen() {
         return;
       }
       const result = await client.checkout.startCheckoutPro.mutate({ bagId, pickupTime });
-      await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code, pickupTime });
+      await recordRemoteReservation({ id: String(result.reservation.id), offer, code: result.reservation.code, pickupTime, paymentMethod: paymentMethodLabels[selectedMethod] });
 
       if (Platform.OS === "web") {
         await WebBrowser.openBrowserAsync(result.preference.initPoint);
