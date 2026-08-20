@@ -1,9 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, useState } from "react";
 import { router } from "expo-router";
-import { FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
+import { CapiLoopMascot } from "@/components/capiloop-mascot";
 import { NearbyOffersSheet } from "@/components/nearby-offers-sheet";
 import { OfferCard } from "@/components/offer-card";
 import { ScreenContainer } from "@/components/screen-container";
@@ -13,8 +14,6 @@ import { useCatalog } from "@/lib/catalog";
 import { filterOffersByStore } from "@/lib/offer-search";
 import { sortOffers, type OfferSort } from "@/lib/offer-sort";
 import { getNearbyOffers } from "@/lib/nearby-offers";
-
-const MASCOT_3D_URL = "/manus-storage/capiloop-capivara-hero-3d_6a84e822.png";
 
 export default function DiscoverScreen() {
   const { impact } = useCapiLoop();
@@ -65,7 +64,7 @@ export default function DiscoverScreen() {
                     <Text style={styles.nearbyButtonText}>Ver mais perto</Text>
                   </Pressable>
                 </View>
-                <Image source={{ uri: MASCOT_3D_URL }} resizeMode="contain" style={styles.mascot} accessibilityLabel="Capivara CapiLoop com uma sacola de alimentos" />
+                <CapiLoopMascot variant="nearby" style={styles.mascot} accessibilityLabel="Capivara CapiLoop em uma sacola, apresentando ofertas próximas" />
               </View>
 
               <View style={styles.searchBox}>

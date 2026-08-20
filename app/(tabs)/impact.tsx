@@ -1,6 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 
+import { CapiLoopMascot } from "@/components/capiloop-mascot";
 import { ScreenContainer } from "@/components/screen-container";
 import { useCapiLoop } from "@/lib/capiloop-store";
 
@@ -38,6 +39,7 @@ export default function ImpactScreen() {
             <Text style={styles.title}>Seu impacto{`\n`}tem peso.</Text>
             <Text style={styles.subtitle}>Cada sacola resgatada vira economia e menos desperdício.</Text>
             <View style={styles.mainCard}>
+              <CapiLoopMascot variant="impact" style={styles.impactMascot} accessibilityLabel="Capivara CapiLoop celebrando seu impacto ambiental" />
               <View style={styles.mainCardTop}><View><Text style={styles.mainLabel}>CO₂ EVITADO</Text><Text style={styles.co2}>{impact.co2Kg.toFixed(1).replace(".", ",")} <Text style={styles.co2Unit}>kg</Text></Text></View><View style={styles.leafCircle}><MaterialIcons name="eco" size={27} color="#151B14" /></View></View>
               <View style={styles.metricsRow}><Metric value={String(impact.savedBags)} label="sacolas" /><View style={styles.metricSeparator} /><Metric value={`R$ ${impact.savings.toFixed(0)}`} label="economizados" /></View>
             </View>
@@ -63,7 +65,8 @@ const styles = StyleSheet.create({
   eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.1, marginTop: 9 },
   title: { color: "#151B14", fontSize: 30, lineHeight: 35, letterSpacing: -1.4, fontWeight: "900", marginTop: 8 },
   subtitle: { color: "#697065", fontSize: 13, lineHeight: 19, marginTop: 8, maxWidth: 310 },
-  mainCard: { marginTop: 22, padding: 20, borderRadius: 26, backgroundColor: "#A5DF00" },
+  mainCard: { marginTop: 22, padding: 20, borderRadius: 26, backgroundColor: "#A5DF00", overflow: "hidden" },
+  impactMascot: { position: "absolute", right: -5, bottom: -16, width: 130, height: 130, opacity: 0.9 },
   mainCardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   mainLabel: { color: "#405500", fontSize: 10, fontWeight: "900", letterSpacing: 0.8 },
   co2: { color: "#151B14", fontSize: 37, lineHeight: 42, letterSpacing: -1.9, fontWeight: "900", marginTop: 3 },

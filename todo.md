@@ -92,6 +92,14 @@
 - [x] Implementar uma camada de sacolas próximas que incentive a primeira reserva e possa ser deslizada para revelar o catálogo.
 - [x] Validar a nova hierarquia, os gestos e a responsividade em orientação retrato.
 
+## Evolução da marca 3D
+
+- [x] Definir a capivara com sacola 3D como elemento central da identidade visual atualizada.
+- [x] Criar uma nova marca de aplicativo compatível com ícones de iOS e Android.
+- [x] Gerar variações minimalistas da capivara 3D para contextos de descoberta, sacola e impacto.
+- [x] Aplicar o novo sistema de mascote em posições estratégicas sem sobrecarregar as telas.
+- [x] Validar contraste, consistência e legibilidade da marca em todo o aplicativo.
+
 ## Ordenação de ofertas
 
 - [x] Implementar ordenação das sacolas por menor distância.
