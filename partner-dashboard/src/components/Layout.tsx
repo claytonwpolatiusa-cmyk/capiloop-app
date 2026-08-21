@@ -49,6 +49,14 @@ export default function Layout({ children }: LayoutProps) {
             🛍️ Minhas Sacolas
           </Link>
           <Link
+            to="/pickup"
+            className={`block px-6 py-3 transition-colors ${
+              isActive('/pickup') ? 'bg-primary text-dark font-semibold' : 'text-gray-300 hover:bg-dark/50'
+            }`}
+          >
+            ✓ Confirmar retirada
+          </Link>
+          <Link
             to="/settings"
             className={`block px-6 py-3 transition-colors ${
               isActive('/settings') ? 'bg-primary text-dark font-semibold' : 'text-gray-300 hover:bg-dark/50'

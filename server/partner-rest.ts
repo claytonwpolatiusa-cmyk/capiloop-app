@@ -4,7 +4,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
-import { bags, partners, reservations, users, type Partner } from "../drizzle/schema";
+import { bags, partners, reservations, transactions, users, type Partner } from "../drizzle/schema";
 import { lookupActiveCnpj, CnpjRegistryError } from "./_core/cnpj-registry";
 import {
   createPartnerSession,
@@ -16,6 +16,7 @@ import {
   verifyPartnerPassword,
 } from "./_core/partner-auth";
 import { getDb } from "./db";
+import { getPickupConfirmationError } from "./pickup-confirmation";
 
 type PartnerRequest = Request & { partner?: Partner };
 
@@ -50,6 +51,12 @@ const createBagSchema = z
     message: "O preço CapiLoop deve ser menor que o preço original.",
     path: ["salePrice"],
   });
+
+const pickupCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^CPL-[A-Z0-9-]{4,16}$/, "Informe um código de comprovante CapiLoop válido.");
 
 function toPartnerJson(partner: Partner) {
   return {
@@ -243,6 +250,60 @@ export function registerPartnerRoutes(app: Router) {
       }
       await db.update(bags).set({ status: "cancelled" }).where(eq(bags.id, bagId));
       res.status(204).send();
+    } catch (error) {
+      sendRouteError(res, error);
+    }
+  });
+
+  router.post("/reservations/:code/confirm", requirePartner(), async (req: PartnerRequest, res) => {
+    try {
+      const code = pickupCodeSchema.parse(req.params.code);
+      const db = await getDb();
+      if (!db) throw new PartnerAuthError("Banco de dados indisponível");
+
+      const found = await db
+        .select({ reservation: reservations, bag: bags })
+        .from(reservations)
+        .innerJoin(bags, eq(reservations.bagId, bags.id))
+        .where(and(eq(reservations.code, code), eq(bags.partnerId, req.partner!.id)))
+        .limit(1);
+      const entry = found[0];
+
+      const completedPayment = entry
+        ? await db
+        .select({ id: transactions.id })
+        .from(transactions)
+        .where(and(eq(transactions.reservationId, entry.reservation.id), eq(transactions.status, "completed")))
+        .limit(1)
+        : [];
+      const validationError = getPickupConfirmationError({
+        belongsToPartner: Boolean(entry),
+        reservationStatus: entry?.reservation.status ?? "pending",
+        hasCompletedPayment: Boolean(completedPayment[0]),
+      });
+      if (validationError) {
+        res.status(validationError.status).json({ message: validationError.message });
+        return;
+      }
+
+      const [updateResult] = await db
+        .update(reservations)
+        .set({ status: "picked_up", pickupDate: new Date().toISOString().slice(0, 10) })
+        .where(and(eq(reservations.id, entry.reservation.id), eq(reservations.status, "confirmed")));
+      if (Number((updateResult as { affectedRows?: number }).affectedRows ?? 0) !== 1) {
+        res.status(409).json({ message: "Esta retirada acabou de ser confirmada em outra operação." });
+        return;
+      }
+
+      res.json({
+        message: "Retirada confirmada com segurança.",
+        reservation: {
+          code: entry.reservation.code,
+          status: "picked_up",
+          pickupTime: entry.reservation.pickupTime,
+          bagCategory: entry.bag.category,
+        },
+      });
     } catch (error) {
       sendRouteError(res, error);
     }

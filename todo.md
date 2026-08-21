@@ -44,9 +44,9 @@
 
 ## Retirada no portal do parceiro
 
-- [ ] Criar endpoint seguro para confirmar a retirada pelo código do comprovante.
-- [ ] Criar tela de confirmação de retirada no portal do parceiro.
-- [ ] Validar códigos inválidos, pedidos de outros parceiros, pagamentos pendentes e retiradas já confirmadas.
+- [x] Criar endpoint seguro para confirmar a retirada pelo código do comprovante.
+- [x] Criar tela de confirmação de retirada no portal do parceiro.
+- [x] Validar códigos inválidos, pedidos de outros parceiros, pagamentos pendentes e retiradas já confirmadas.
 
 ## Correção da descoberta de ofertas
 

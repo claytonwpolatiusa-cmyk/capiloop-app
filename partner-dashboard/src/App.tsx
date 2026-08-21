@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import BagsPage from './pages/BagsPage'
 import SettingsPage from './pages/SettingsPage'
+import PickupPage from './pages/PickupPage'
 import { partnerApi } from './lib/partner-api'
 
 export default function App() {
@@ -53,6 +54,10 @@ export default function App() {
         <Route
           path="/settings"
           element={isAuthenticated ? <SettingsPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/pickup"
+          element={isAuthenticated ? <PickupPage /> : <Navigate to="/login" />}
         />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>
