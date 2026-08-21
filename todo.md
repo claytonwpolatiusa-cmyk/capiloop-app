@@ -123,6 +123,10 @@
 - [x] Adicionar uma galeria de três fotos do estabelecimento na experiência de oferta.
 - [x] Validar o layout, a rolagem e a interação de arraste em orientação retrato.
 - [x] Corrigir o enquadramento superior para respeitar a área segura sem deslocar o cabeçalho e a localização.
+- [x] Aplicar o mesmo padrão de áreas seguras e enquadramento às telas de perfil e pedidos.
+- [x] Adaptar espaçamentos e controles para telas móveis menores e compactas.
+- [x] Adicionar uma transição suave da descoberta ao detalhe da oferta.
+- [x] Validar a responsividade e a navegação atualizadas em orientação retrato.
 
 ## Ordenação de ofertas
 

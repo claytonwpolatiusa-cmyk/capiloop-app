@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, useState } from "react";
 import { router } from "expo-router";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { CapiLoopMascot } from "@/components/capiloop-mascot";
@@ -17,6 +17,8 @@ import { getNearbyOffers } from "@/lib/nearby-offers";
 import { getFavoriteAvailabilityAlerts } from "@/lib/favorite-alerts";
 
 export default function DiscoverScreen() {
+  const { height, width } = useWindowDimensions();
+  const isCompact = height < 720 || width < 365;
   const { impact, favoriteStores, mutedFavoriteStores } = useCapiLoop();
   const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
   const [selectedCategory, setSelectedCategory] = useState<OfferCategory | "Todas">("Todas");
@@ -39,11 +41,11 @@ export default function DiscoverScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <OfferCard offer={item} />}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, isCompact && styles.contentCompact]}
           refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void refresh()} tintColor="#5E7D00" />}
           ListHeaderComponent={
             <View>
-              <View style={styles.topbar}>
+              <View style={[styles.topbar, isCompact && styles.topbarCompact]}>
                 <CapiLoopBrand />
                 <Pressable accessibilityLabel="Notificações" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
                   <MaterialIcons name="notifications-none" size={21} color="#151B14" />
@@ -56,18 +58,18 @@ export default function DiscoverScreen() {
                 <MaterialIcons name="keyboard-arrow-right" size={20} color="#697065" />
               </Pressable>
 
-              <View style={styles.hero}>
+              <View style={[styles.hero, isCompact && styles.heroCompact]}>
                 <View style={styles.heroGlow} />
                 <View style={styles.heroContent}>
                   <Text style={styles.heroEyebrow}>COMIDA BOA MERECE UM LOOP</Text>
-                  <Text style={styles.heroTitle}>Uma surpresa{`\n`}boa está perto.</Text>
+                  <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]}>Uma surpresa{`\n`}boa está perto.</Text>
                   <Text style={styles.heroCopy}>Resgate por menos, retire no horário certo e faça a comida circular.</Text>
                   <Pressable onPress={() => setIsNearbySheetVisible(true)} style={({ pressed }) => [styles.nearbyButton, pressed && styles.pressed]} accessibilityLabel="Ver sacolas mais próximas">
                     <MaterialIcons name="near-me" size={16} color="#253000" />
                     <Text style={styles.nearbyButtonText}>Ver mais perto</Text>
                   </Pressable>
                 </View>
-                <CapiLoopMascot variant="nearby" style={styles.mascot} accessibilityLabel="Capivara CapiLoop em uma sacola, apresentando ofertas próximas" />
+                <CapiLoopMascot variant="nearby" style={[styles.mascot, isCompact && styles.mascotCompact]} accessibilityLabel="Capivara CapiLoop em uma sacola, apresentando ofertas próximas" />
               </View>
 
               <View style={styles.searchBox}>
@@ -182,7 +184,9 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, width: "100%", maxWidth: 560, alignSelf: "center" },
   content: { paddingBottom: 132, flexGrow: 1, paddingTop: 14 },
+  contentCompact: { paddingTop: 6, paddingBottom: 112 },
   topbar: { marginHorizontal: 20, marginTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  topbarCompact: { marginHorizontal: 16 },
   iconButton: { height: 42, width: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", shadowColor: "#182314", shadowOpacity: 0.04, shadowRadius: 7, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
   pressed: { opacity: 0.6 },
   locationRow: { alignSelf: "center", flexDirection: "row", alignItems: "center", marginTop: 17, gap: 8, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18, backgroundColor: "#F0F5E3" },
@@ -190,14 +194,17 @@ const styles = StyleSheet.create({
   locationLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
   locationText: { color: "#4F574E", fontSize: 13, fontWeight: "800", marginTop: 1 },
   hero: { minHeight: 220, marginHorizontal: 20, marginTop: 18, borderRadius: 30, padding: 22, backgroundColor: "#E7F4C8", overflow: "hidden" },
+  heroCompact: { minHeight: 202, marginHorizontal: 16, marginTop: 14, borderRadius: 25, padding: 18 },
   heroGlow: { position: "absolute", height: 220, width: 220, borderRadius: 110, backgroundColor: "#D0ED76", right: -76, top: -76 },
   heroContent: { position: "relative", zIndex: 2, maxWidth: "63%" },
   heroEyebrow: { color: "#4A6410", fontSize: 9, fontWeight: "900", letterSpacing: 0.75 },
   heroTitle: { color: "#151B14", fontSize: 29, lineHeight: 33, letterSpacing: -1.4, fontWeight: "900", marginTop: 10 },
+  heroTitleCompact: { fontSize: 26, lineHeight: 30, marginTop: 8 },
   heroCopy: { color: "#4F574E", fontSize: 12, lineHeight: 17, marginTop: 8 },
   nearbyButton: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 14, paddingHorizontal: 11, paddingVertical: 9, backgroundColor: "#B8E231", marginTop: 15 },
   nearbyButtonText: { color: "#253000", fontSize: 11, fontWeight: "900" },
   mascot: { position: "absolute", right: -4, bottom: -14, width: 156, height: 193, zIndex: 1 },
+  mascotCompact: { right: -10, bottom: -18, width: 142, height: 176 },
   searchBox: { minHeight: 52, marginHorizontal: 20, marginTop: 16, paddingHorizontal: 14, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", flexDirection: "row", alignItems: "center", gap: 10, shadowColor: "#182314", shadowOpacity: 0.04, shadowRadius: 9, shadowOffset: { width: 0, height: 4 }, elevation: 1 },
   searchInput: { flex: 1, minHeight: 48, color: "#151B14", fontSize: 14, fontWeight: "700", paddingVertical: 0 },
   clearSearch: { height: 30, width: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#F2F4F0" },

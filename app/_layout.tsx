@@ -15,7 +15,7 @@ export default function RootLayout() {
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="offer/[id]" />
+            <Stack.Screen name="offer/[id]" options={{ animation: "fade_from_bottom", animationDuration: 260 }} />
             <Stack.Screen name="offer/confirm" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
             <Stack.Screen name="reservation/[id]" options={{ animation: "fade" }} />
             <Stack.Screen name="checkout/result" options={{ animation: "fade" }} />
