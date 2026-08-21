@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { formatCurrency } from "@/lib/capiloop-data";
@@ -14,6 +14,8 @@ export default function CheckoutResultScreen() {
   const { reservationId, status } = useLocalSearchParams<{ reservationId?: string; status?: string }>();
   const { reservations } = useCapiLoop();
   const { getOffer } = useCatalog();
+  const { width, fontScale } = useWindowDimensions();
+  const isCompact = width < 360 || fontScale > 1.15;
   const badgeScale = useRef(new Animated.Value(0.7)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
   const [now, setNow] = useState(() => new Date());
@@ -41,13 +43,13 @@ export default function CheckoutResultScreen() {
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]} className="flex-1">
-      <View style={styles.content}>
+      <View style={[styles.content, isCompact && styles.contentCompact]}>
         <Animated.View style={[styles.icon, approved && styles.approved, failed && styles.failed, { transform: [{ scale: badgeScale }] }]}>
           <MaterialIcons name={approved ? "check" : failed ? "close" : "schedule"} size={37} color="#151B14" />
         </Animated.View>
         <Text style={styles.eyebrow}>{approved ? "TUDO CERTO" : failed ? "TENTE NOVAMENTE" : "PAGAMENTO EM ANÁLISE"}</Text>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.copy}>{copy}</Text>
+        <Text style={[styles.title, isCompact && styles.titleCompact]} maxFontSizeMultiplier={1.25}>{title}</Text>
+        <Text style={styles.copy} maxFontSizeMultiplier={1.3}>{copy}</Text>
 
         {offer ? (
           <Animated.View style={[styles.orderCard, { opacity: cardOpacity, transform: [{ translateY: cardOpacity.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
@@ -69,11 +71,11 @@ export default function CheckoutResultScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, justifyContent: "center", paddingHorizontal: 24, paddingTop: 20 },
+  content: { flex: 1, justifyContent: "center", paddingHorizontal: 24, paddingTop: 20 }, contentCompact: { paddingHorizontal: 18, paddingTop: 10 },
   icon: { width: 82, height: 82, borderRadius: 29, backgroundColor: "#ECF6CD", alignItems: "center", justifyContent: "center", alignSelf: "center" },
   approved: { backgroundColor: "#A5DF00" }, failed: { backgroundColor: "#F7D7D4" },
   eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.05, textAlign: "center", marginTop: 22 },
-  title: { color: "#151B14", fontSize: 29, lineHeight: 34, letterSpacing: -1.1, fontWeight: "900", textAlign: "center", marginTop: 7 },
+  title: { color: "#151B14", fontSize: 29, lineHeight: 34, letterSpacing: -1.1, fontWeight: "900", textAlign: "center", marginTop: 7 }, titleCompact: { fontSize: 25, lineHeight: 30, letterSpacing: -0.7 },
   copy: { color: "#697065", fontSize: 13, lineHeight: 19, textAlign: "center", marginTop: 9, paddingHorizontal: 8 },
   orderCard: { backgroundColor: "#FFFFFF", borderRadius: 25, padding: 18, borderWidth: 1, borderColor: "#E8ECE4", marginTop: 25, shadowColor: "#182314", shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 7 }, elevation: 2 },
   orderTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, cardEyebrow: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, store: { color: "#151B14", fontSize: 17, fontWeight: "900", marginTop: 4 }, subtitle: { color: "#697065", fontSize: 11, marginTop: 2 }, bagIcon: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "#ECF6CD" },

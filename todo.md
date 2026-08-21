@@ -127,6 +127,10 @@
 - [x] Adaptar espaçamentos e controles para telas móveis menores e compactas.
 - [x] Adicionar uma transição suave da descoberta ao detalhe da oferta.
 - [x] Validar a responsividade e a navegação atualizadas em orientação retrato.
+- [x] Aplicar transições suaves e consistentes às telas de checkout e histórico de pedidos.
+- [x] Exibir skeleton animado enquanto os detalhes de estabelecimentos são carregados.
+- [x] Adaptar automaticamente os tamanhos de fonte para leitura em telas menores.
+- [x] Validar fluidez, carregamento e legibilidade em orientação retrato.
 
 ## Ordenação de ofertas
 

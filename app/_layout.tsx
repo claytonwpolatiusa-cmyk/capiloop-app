@@ -18,9 +18,9 @@ export default function RootLayout() {
             <Stack.Screen name="offer/[id]" options={{ animation: "fade_from_bottom", animationDuration: 260 }} />
             <Stack.Screen name="offer/confirm" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
             <Stack.Screen name="reservation/[id]" options={{ animation: "fade" }} />
-            <Stack.Screen name="checkout/result" options={{ animation: "fade" }} />
+            <Stack.Screen name="checkout/result" options={{ animation: "fade_from_bottom", animationDuration: 260 }} />
             <Stack.Screen name="favorites" options={{ animation: "slide_from_right" }} />
-            <Stack.Screen name="order-history" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="order-history" options={{ animation: "fade_from_bottom", animationDuration: 260 }} />
             <Stack.Screen name="help/index" options={{ animation: "slide_from_right" }} />
           </Stack>
         </CatalogProvider>
