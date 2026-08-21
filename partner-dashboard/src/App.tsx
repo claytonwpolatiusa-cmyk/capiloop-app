@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage'
 import BagsPage from './pages/BagsPage'
 import SettingsPage from './pages/SettingsPage'
 import PickupPage from './pages/PickupPage'
+import ReservationsPage from './pages/ReservationsPage'
 import { partnerApi } from './lib/partner-api'
 
 export default function App() {
@@ -58,6 +59,10 @@ export default function App() {
         <Route
           path="/pickup"
           element={isAuthenticated ? <PickupPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/reservations"
+          element={isAuthenticated ? <ReservationsPage /> : <Navigate to="/login" />}
         />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>

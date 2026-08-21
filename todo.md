@@ -23,7 +23,7 @@
 - [x] Criar projeto web separado para dashboard de restaurantes.
 - [x] Implementar login de parceiros com verificação de CNPJ.
 - [x] Criar tela de cadastro de sacolas diárias.
-- [ ] Implementar tela de gerenciamento de sacolas (editar, cancelar, visualizar reservas).
+- [x] Implementar tela de gerenciamento de sacolas (editar, cancelar, visualizar reservas).
 - [x] Criar relatórios de vendas e impacto ambiental.
 - [ ] Implementar notificações de novas reservas.
 
@@ -47,6 +47,10 @@
 - [x] Criar endpoint seguro para confirmar a retirada pelo código do comprovante.
 - [x] Criar tela de confirmação de retirada no portal do parceiro.
 - [x] Validar códigos inválidos, pedidos de outros parceiros, pagamentos pendentes e retiradas já confirmadas.
+- [x] Exibir uma lista das reservas do dia, com horário, sacola, status e código do comprovante.
+- [x] Permitir editar os detalhes de sacolas publicadas antes de sua retirada.
+- [x] Permitir cancelar sacolas publicadas sem afetar reservas já confirmadas.
+- [x] Exibir animação de sucesso e recibo digital após confirmar uma retirada.
 
 ## Correção da descoberta de ofertas
 

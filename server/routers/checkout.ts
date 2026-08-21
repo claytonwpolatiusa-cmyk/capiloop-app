@@ -71,6 +71,7 @@ async function createReservation(userId: number, bagId: number, pickupTime: stri
     code,
     status: "pending",
     pickupTime,
+    pickupDate: new Date().toISOString().slice(0, 10),
   });
   await db
     .update(bags)

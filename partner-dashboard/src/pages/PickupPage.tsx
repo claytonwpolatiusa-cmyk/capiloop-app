@@ -7,6 +7,7 @@ type PickupConfirmation = {
   status: 'picked_up'
   pickupTime?: string | null
   bagCategory: string
+  confirmedAt: string
 }
 
 export default function PickupPage() {
@@ -14,6 +15,7 @@ export default function PickupPage() {
   const [confirmation, setConfirmation] = useState<PickupConfirmation | null>(null)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const formattedConfirmationTime = confirmation ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(confirmation.confirmedAt)) : ''
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -74,14 +76,26 @@ export default function PickupPage() {
         {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-medium text-red-800">{error}</div>}
 
         {confirmation && (
-          <section role="status" className="rounded-2xl border border-green-200 bg-green-50 p-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-green-700">Retirada confirmada</p>
-            <h2 className="mt-2 text-2xl font-bold text-green-950">Sacola entregue com sucesso.</h2>
-            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-              <div><dt className="font-semibold text-green-800">Código</dt><dd className="mt-1 font-mono font-bold text-green-950">{confirmation.code}</dd></div>
-              <div><dt className="font-semibold text-green-800">Sacola</dt><dd className="mt-1 font-medium text-green-950">{confirmation.bagCategory}</dd></div>
-              {confirmation.pickupTime && <div><dt className="font-semibold text-green-800">Horário previsto</dt><dd className="mt-1 font-medium text-green-950">{confirmation.pickupTime}</dd></div>}
-            </dl>
+          <section role="status" className="pickup-success-card overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
+            <div className="bg-green-50 px-6 py-6 text-center">
+              <div className="pickup-success-check mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-3xl font-bold text-white" aria-hidden="true">✓</div>
+              <p className="mt-4 text-sm font-bold uppercase tracking-widest text-green-700">Retirada confirmada</p>
+              <h2 className="mt-2 text-2xl font-bold text-green-950">Sacola entregue com sucesso.</h2>
+              <p className="mt-2 text-sm text-green-800">O comprovante foi registrado na operação da loja.</p>
+            </div>
+            <div className="p-6">
+              <div className="mb-5 flex items-center justify-between border-b border-dashed border-gray-200 pb-4">
+                <div><p className="text-xs font-bold uppercase tracking-widest text-gray-500">Recibo digital</p><p className="mt-1 text-sm text-gray-600">CapiLoop · Retirada local</p></div>
+                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-800">Concluída</span>
+              </div>
+              <dl className="grid gap-4 text-sm sm:grid-cols-2">
+                <div><dt className="font-semibold text-gray-500">Código do comprovante</dt><dd className="mt-1 font-mono text-lg font-bold text-dark">{confirmation.code}</dd></div>
+                <div><dt className="font-semibold text-gray-500">Confirmada em</dt><dd className="mt-1 font-medium text-dark">{formattedConfirmationTime}</dd></div>
+                <div><dt className="font-semibold text-gray-500">Sacola entregue</dt><dd className="mt-1 font-medium text-dark">{confirmation.bagCategory}</dd></div>
+                {confirmation.pickupTime && <div><dt className="font-semibold text-gray-500">Horário programado</dt><dd className="mt-1 font-medium text-dark">{confirmation.pickupTime}</dd></div>}
+              </dl>
+              <button type="button" onClick={() => window.print()} className="mt-6 w-full rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-dark transition hover:bg-gray-50 print:hidden">Imprimir recibo</button>
+            </div>
           </section>
         )}
 

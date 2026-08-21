@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { Router } from "express";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
@@ -234,18 +234,62 @@ export function registerPartnerRoutes(app: Router) {
     }
   });
 
+  router.put("/bags/:bagId", requirePartner(), async (req: PartnerRequest, res) => {
+    try {
+      const bagId = z.coerce.number().int().positive().parse(req.params.bagId);
+      const input = createBagSchema.parse(req.body);
+      const db = await getDb();
+      if (!db) throw new PartnerAuthError("Banco de dados indisponível");
+      const owned = await db.select().from(bags).where(and(eq(bags.id, bagId), eq(bags.partnerId, req.partner!.id))).limit(1);
+      const bag = owned[0];
+      if (!bag) {
+        res.status(404).json({ message: "Sacola não encontrada." });
+        return;
+      }
+      if (bag.status !== "active") {
+        res.status(409).json({ message: "Somente sacolas ativas podem ser editadas." });
+        return;
+      }
+      if (bag.reserved > 0) {
+        res.status(409).json({ message: "Esta sacola já possui reservas e não pode mais ser alterada." });
+        return;
+      }
+
+      await db.update(bags).set({
+        category: input.category,
+        originalPrice: input.originalPrice.toFixed(2),
+        salePrice: input.salePrice.toFixed(2),
+        expectedItems: input.expectedItems,
+        pickupStartTime: input.pickupStartTime,
+        pickupEndTime: input.pickupEndTime,
+        quantity: input.quantity,
+        co2Kg: input.co2Kg.toFixed(2),
+        ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl } : {}),
+      }).where(eq(bags.id, bagId));
+      res.json({ message: "Sacola atualizada com sucesso." });
+    } catch (error) {
+      sendRouteError(res, error);
+    }
+  });
+
   router.delete("/bags/:bagId", requirePartner(), async (req: PartnerRequest, res) => {
     try {
       const bagId = z.coerce.number().int().positive().parse(req.params.bagId);
       const db = await getDb();
       if (!db) throw new PartnerAuthError("Banco de dados indisponível");
-      const owned = await db
-        .select({ id: bags.id })
-        .from(bags)
-        .where(and(eq(bags.id, bagId), eq(bags.partnerId, req.partner!.id)))
-        .limit(1);
-      if (!owned[0]) {
+      const owned = await db.select().from(bags).where(and(eq(bags.id, bagId), eq(bags.partnerId, req.partner!.id))).limit(1);
+      const bag = owned[0];
+      if (!bag) {
         res.status(404).json({ message: "Sacola não encontrada." });
+        return;
+      }
+      const linkedReservations = await db
+        .select({ id: reservations.id })
+        .from(reservations)
+        .where(and(eq(reservations.bagId, bag.id), inArray(reservations.status, ["pending", "confirmed", "picked_up"])))
+        .limit(1);
+      if (linkedReservations[0]) {
+        res.status(409).json({ message: "Esta sacola possui reservas em andamento ou concluídas e não pode ser cancelada." });
         return;
       }
       await db.update(bags).set({ status: "cancelled" }).where(eq(bags.id, bagId));
@@ -286,9 +330,10 @@ export function registerPartnerRoutes(app: Router) {
         return;
       }
 
+      const confirmedAt = new Date();
       const [updateResult] = await db
         .update(reservations)
-        .set({ status: "picked_up", pickupDate: new Date().toISOString().slice(0, 10) })
+        .set({ status: "picked_up", pickupDate: confirmedAt.toISOString().slice(0, 10) })
         .where(and(eq(reservations.id, entry.reservation.id), eq(reservations.status, "confirmed")));
       if (Number((updateResult as { affectedRows?: number }).affectedRows ?? 0) !== 1) {
         res.status(409).json({ message: "Esta retirada acabou de ser confirmada em outra operação." });
@@ -302,7 +347,46 @@ export function registerPartnerRoutes(app: Router) {
           status: "picked_up",
           pickupTime: entry.reservation.pickupTime,
           bagCategory: entry.bag.category,
+          confirmedAt: confirmedAt.toISOString(),
         },
+      });
+    } catch (error) {
+      sendRouteError(res, error);
+    }
+  });
+
+  router.get("/reservations/today", requirePartner(), async (req: PartnerRequest, res) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new PartnerAuthError("Banco de dados indisponível");
+      const today = new Date().toISOString().slice(0, 10);
+      const rows = await db
+        .select({ reservation: reservations, bag: bags, customer: users })
+        .from(reservations)
+        .innerJoin(bags, eq(reservations.bagId, bags.id))
+        .innerJoin(users, eq(reservations.userId, users.id))
+        .where(and(eq(bags.partnerId, req.partner!.id), eq(reservations.pickupDate, today)))
+        .orderBy(asc(reservations.pickupTime));
+      const summary = rows.reduce((totals, { reservation }) => {
+        totals.total += 1;
+        if (reservation.status === "pending") totals.pending += 1;
+        if (reservation.status === "confirmed") totals.confirmed += 1;
+        if (reservation.status === "picked_up") totals.pickedUp += 1;
+        return totals;
+      }, { total: 0, pending: 0, confirmed: 0, pickedUp: 0 });
+      res.json({
+        date: today,
+        summary,
+        reservations: rows.map(({ reservation, bag, customer }) => ({
+          id: reservation.id,
+          code: reservation.code,
+          status: reservation.status,
+          pickupTime: reservation.pickupTime,
+          pickupDate: reservation.pickupDate,
+          createdAt: reservation.createdAt,
+          customerName: customer.name || "Cliente CapiLoop",
+          bag: { id: bag.id, category: bag.category, expectedItems: bag.expectedItems, salePrice: Number(bag.salePrice) },
+        })),
       });
     } catch (error) {
       sendRouteError(res, error);
