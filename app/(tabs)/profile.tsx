@@ -3,7 +3,9 @@ import { useRouter } from "expo-router";
 import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
+import { MotionReveal } from "@/components/motion-reveal";
 import { ScreenContainer } from "@/components/screen-container";
+import { TactilePressable } from "@/components/tactile-pressable";
 import { startOAuthLogin } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -25,7 +27,7 @@ export default function ProfileScreen() {
   return <ScreenContainer edges={["top", "left", "right"]} className="flex-1"><FlatList
     data={options} keyExtractor={(item) => item.title} contentContainerStyle={[styles.content, isCompact && styles.contentCompact]}
     renderItem={({ item }) => <Pressable accessibilityRole="button" onPress={() => item.title === "Central de ajuda" ? router.push("/help" as never) : item.title === "Favoritos" ? router.push("/favorites" as never) : item.title === "Histórico de pedidos" ? router.push("/order-history" as never) : undefined} style={({ pressed }) => [styles.option, pressed && { opacity: 0.65 }]}><View style={styles.optionIcon}><MaterialIcons name={item.icon as never} size={20} color="#151B14" /></View><View style={styles.optionInfo}><Text style={styles.optionTitle}>{item.title}</Text><Text style={styles.optionDetail}>{item.detail}</Text></View><MaterialIcons name="chevron-right" size={23} color="#AEB5AA" /></Pressable>}
-    ListHeaderComponent={<View><CapiLoopBrand compact /><View style={[styles.profileHead, isCompact && styles.profileHeadCompact]}><View style={[styles.avatar, isCompact && styles.avatarCompact]}><Text style={styles.avatarText}>{initials}</Text></View><View style={styles.profileCopy}><Text style={[styles.name, isCompact && styles.nameCompact]}>{displayName}</Text><Text style={styles.member}>{isAuthenticated ? "Membro do CapiLoop" : "Entre para reservar e pagar"}</Text></View></View><Pressable disabled={loading} onPress={() => isAuthenticated ? void logout() : void startOAuthLogin()} style={({ pressed }) => [styles.authButton, isCompact && styles.authButtonCompact, pressed && { opacity: 0.75 }]}><MaterialIcons name={isAuthenticated ? "logout" : "login"} size={18} color="#FFFFFF" /><Text style={styles.authText}>{isAuthenticated ? "Sair da conta" : "Entrar ou criar conta"}</Text></Pressable><Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Conta</Text></View>}
+    ListHeaderComponent={<View><CapiLoopBrand compact /><MotionReveal delay={40}><View style={[styles.profileHead, isCompact && styles.profileHeadCompact]}><View style={[styles.avatar, isCompact && styles.avatarCompact]}><Text style={styles.avatarText}>{initials}</Text></View><View style={styles.profileCopy}><Text style={[styles.name, isCompact && styles.nameCompact]}>{displayName}</Text><Text style={styles.member}>{isAuthenticated ? "Membro do CapiLoop" : "Entre para reservar e pagar"}</Text></View></View><TactilePressable disabled={loading} onPress={() => isAuthenticated ? void logout() : void startOAuthLogin()} style={[styles.authButton, isCompact && styles.authButtonCompact]}><MaterialIcons name={isAuthenticated ? "logout" : "login"} size={18} color="#FFFFFF" /><Text style={styles.authText}>{isAuthenticated ? "Sair da conta" : "Entrar ou criar conta"}</Text></TactilePressable></MotionReveal><Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Conta</Text></View>}
     ListFooterComponent={<Text style={styles.version}>CapiLoop · pagamento seguro via Mercado Pago</Text>}
   /></ScreenContainer>;
 }

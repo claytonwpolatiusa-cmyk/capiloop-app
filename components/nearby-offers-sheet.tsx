@@ -1,8 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { useMemo, useRef } from "react";
-import { Animated, FlatList, Image, PanResponder, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import { Animated, Easing, FlatList, Image, PanResponder, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { formatCurrency, type Offer } from "@/lib/capiloop-data";
 
@@ -15,12 +15,23 @@ type NearbyOffersSheetProps = {
 
 export function NearbyOffersSheet({ offers, isLoading, error, onDismiss }: NearbyOffersSheetProps) {
   const { height } = useWindowDimensions();
-  const translateY = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(120)).current;
   const sheetHeight = Math.min(Math.max(height * 0.49, 360), 460);
+
+  useEffect(() => {
+    translateY.setValue(Math.min(sheetHeight * 0.28, 128));
+    const animation = Animated.timing(translateY, { toValue: 0, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    animation.start();
+    return () => animation.stop();
+  }, [sheetHeight, translateY]);
+
+  const settleAtTop = () => {
+    Animated.timing(translateY, { toValue: 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  };
 
   const dismiss = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
-    Animated.timing(translateY, { toValue: sheetHeight + 24, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+    Animated.timing(translateY, { toValue: sheetHeight + 24, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
       if (finished) onDismiss();
     });
   };
@@ -37,10 +48,10 @@ export function NearbyOffersSheet({ offers, isLoading, error, onDismiss }: Nearb
             dismiss();
             return;
           }
-          Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
+          settleAtTop();
         },
         onPanResponderTerminationRequest: () => false,
-        onPanResponderTerminate: () => Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start(),
+        onPanResponderTerminate: settleAtTop,
       }),
     [sheetHeight, translateY],
   );

@@ -1,7 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 
+import { AnimatedProgressBar } from "@/components/animated-progress-bar";
 import { CapiLoopMascot } from "@/components/capiloop-mascot";
+import { MotionReveal } from "@/components/motion-reveal";
 import { ScreenContainer } from "@/components/screen-container";
 import { useCapiLoop } from "@/lib/capiloop-store";
 
@@ -38,14 +40,16 @@ export default function ImpactScreen() {
             <Text style={styles.eyebrow}>PASSAPORTE VERDE</Text>
             <Text style={styles.title}>Seu impacto{`\n`}tem peso.</Text>
             <Text style={styles.subtitle}>Cada sacola resgatada vira economia e menos desperdício.</Text>
-            <View style={styles.mainCard}>
-              <CapiLoopMascot variant="impact" style={styles.impactMascot} accessibilityLabel="Capivara CapiLoop celebrando seu impacto ambiental" />
-              <View style={styles.mainCardTop}><View><Text style={styles.mainLabel}>CO₂ EVITADO</Text><Text style={styles.co2}>{impact.co2Kg.toFixed(1).replace(".", ",")} <Text style={styles.co2Unit}>kg</Text></Text></View><View style={styles.leafCircle}><MaterialIcons name="eco" size={27} color="#151B14" /></View></View>
-              <View style={styles.metricsRow}><Metric value={String(impact.savedBags)} label="sacolas" /><View style={styles.metricSeparator} /><Metric value={`R$ ${impact.savings.toFixed(0)}`} label="economizados" /></View>
-            </View>
+            <MotionReveal delay={50}>
+              <View style={styles.mainCard}>
+                <CapiLoopMascot variant="impact" style={styles.impactMascot} accessibilityLabel="Capivara CapiLoop celebrando seu impacto ambiental" />
+                <View style={styles.mainCardTop}><View><Text style={styles.mainLabel}>CO₂ EVITADO</Text><Text style={styles.co2}>{impact.co2Kg.toFixed(1).replace(".", ",")} <Text style={styles.co2Unit}>kg</Text></Text></View><View style={styles.leafCircle}><MaterialIcons name="eco" size={27} color="#151B14" /></View></View>
+                <View style={styles.metricsRow}><Metric value={String(impact.savedBags)} label="sacolas" /><View style={styles.metricSeparator} /><Metric value={`R$ ${impact.savings.toFixed(0)}`} label="economizados" /></View>
+              </View>
+            </MotionReveal>
             <View style={styles.levelCard}>
               <View style={styles.levelTop}><View><Text style={styles.levelLabel}>SEU NÍVEL</Text><Text style={styles.levelTitle}>Explorador do Loop</Text></View><Text style={styles.progressText}>{impact.savedBags}/{nextGoal}</Text></View>
-              <View style={styles.track}><View style={[styles.progress, { width: `${progress * 100}%` }]} /></View>
+              <View style={styles.progressWrap}><AnimatedProgressBar value={progress} /></View>
               <Text style={styles.levelCopy}>Faltam {Math.max(nextGoal - impact.savedBags, 0)} sacolas para Protetor das Capivaras.</Text>
             </View>
             <Text style={styles.achievementsTitle}>Conquistas</Text>
@@ -81,8 +85,7 @@ const styles = StyleSheet.create({
   levelLabel: { color: "#697065", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
   levelTitle: { color: "#151B14", fontSize: 15, fontWeight: "900", marginTop: 3 },
   progressText: { color: "#5E7D00", fontSize: 13, fontWeight: "900" },
-  track: { height: 8, borderRadius: 4, backgroundColor: "#ECF0E8", marginTop: 15, overflow: "hidden" },
-  progress: { height: "100%", borderRadius: 4, backgroundColor: "#A5DF00" },
+  progressWrap: { marginTop: 15 },
   levelCopy: { color: "#697065", fontSize: 11, marginTop: 10 },
   achievementsTitle: { color: "#151B14", fontSize: 19, fontWeight: "900", letterSpacing: -0.6, marginTop: 25, marginBottom: 12 },
   milestoneCard: { backgroundColor: "#FFFFFF", borderRadius: 20, padding: 15, flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 10, borderWidth: 1, borderColor: "#E8ECE4" },

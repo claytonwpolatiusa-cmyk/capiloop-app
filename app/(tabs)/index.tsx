@@ -5,9 +5,11 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, useWi
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { CapiLoopMascot } from "@/components/capiloop-mascot";
+import { MotionReveal } from "@/components/motion-reveal";
 import { NearbyOffersSheet } from "@/components/nearby-offers-sheet";
 import { OfferCard } from "@/components/offer-card";
 import { ScreenContainer } from "@/components/screen-container";
+import { TactilePressable } from "@/components/tactile-pressable";
 import { categories, type OfferCategory } from "@/lib/capiloop-data";
 import { useCapiLoop } from "@/lib/capiloop-store";
 import { useCatalog } from "@/lib/catalog";
@@ -58,19 +60,21 @@ export default function DiscoverScreen() {
                 <MaterialIcons name="keyboard-arrow-right" size={20} color="#697065" />
               </Pressable>
 
-              <View style={[styles.hero, isCompact && styles.heroCompact]}>
-                <View style={styles.heroGlow} />
-                <View style={styles.heroContent}>
-                  <Text style={styles.heroEyebrow}>COMIDA BOA MERECE UM LOOP</Text>
-                  <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]}>Uma surpresa{`\n`}boa está perto.</Text>
-                  <Text style={styles.heroCopy}>Resgate por menos, retire no horário certo e faça a comida circular.</Text>
-                  <Pressable onPress={() => setIsNearbySheetVisible(true)} style={({ pressed }) => [styles.nearbyButton, pressed && styles.pressed]} accessibilityLabel="Ver sacolas mais próximas">
+              <MotionReveal delay={50}>
+                <View style={[styles.hero, isCompact && styles.heroCompact]}>
+                  <View style={styles.heroGlow} />
+                  <View style={styles.heroContent}>
+                    <Text style={styles.heroEyebrow}>COMIDA BOA MERECE UM LOOP</Text>
+                    <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]}>Uma surpresa{`\n`}boa está perto.</Text>
+                    <Text style={styles.heroCopy}>Resgate por menos, retire no horário certo e faça a comida circular.</Text>
+                    <TactilePressable onPress={() => setIsNearbySheetVisible(true)} style={styles.nearbyButton} accessibilityLabel="Ver sacolas mais próximas">
                     <MaterialIcons name="near-me" size={16} color="#253000" />
                     <Text style={styles.nearbyButtonText}>Ver mais perto</Text>
-                  </Pressable>
+                    </TactilePressable>
+                  </View>
+                  <CapiLoopMascot variant="nearby" style={[styles.mascot, isCompact && styles.mascotCompact]} accessibilityLabel="Capivara CapiLoop em uma sacola, apresentando ofertas próximas" />
                 </View>
-                <CapiLoopMascot variant="nearby" style={[styles.mascot, isCompact && styles.mascotCompact]} accessibilityLabel="Capivara CapiLoop em uma sacola, apresentando ofertas próximas" />
-              </View>
+              </MotionReveal>
 
               <View style={styles.searchBox}>
               <MaterialIcons name="search" size={20} color="#697065" />

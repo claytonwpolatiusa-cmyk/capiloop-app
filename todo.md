@@ -136,6 +136,13 @@
 - [x] Adaptar automaticamente os tamanhos de fonte para leitura em telas menores.
 - [x] Validar fluidez, carregamento e legibilidade em orientação retrato.
 
+## Refinamento geral de UI e UX
+
+- [x] Aprimorar a hierarquia visual e o acabamento das telas principais do aplicativo.
+- [x] Adicionar microinterações sutis aos controles e ações de alta prioridade.
+- [x] Padronizar transições e feedbacks de carregamento entre os fluxos principais.
+- [x] Validar fluidez, leitura e toque em telas compactas.
+
 ## Ordenação de ofertas
 
 - [x] Implementar ordenação das sacolas por menor distância.
