@@ -230,3 +230,9 @@
 - [x] Implementar a seleção guiada do assunto e o encaminhamento por e-mail ao suporte.
 - [x] Adicionar acesso à Central de Ajuda no perfil do cliente.
 - [x] Validar o fluxo no aplicativo e os cenários sem cliente de e-mail disponível.
+
+## Documento institucional da CapiLoop
+
+- [x] Consolidar uma explicação completa da CapiLoop, do produto, da marca e da operação.
+- [x] Documentar o fluxo de clientes, parceiros, pagamentos, retirada e segurança.
+- [x] Registrar as entregas implementadas, limitações atuais e próximos passos do projeto.
