@@ -230,6 +230,9 @@
 - [x] Implementar a seleção guiada do assunto e o encaminhamento por e-mail ao suporte.
 - [x] Adicionar acesso à Central de Ajuda no perfil do cliente.
 - [x] Validar o fluxo no aplicativo e os cenários sem cliente de e-mail disponível.
+- [x] Garantir que cada problema da Central de Ajuda ofereça uma próxima ação funcional e sem bloqueios.
+- [x] Criar alternativas de progresso quando o cliente de e-mail não estiver disponível.
+- [x] Validar as rotas de ajuda, retorno e contato em ambiente web e móvel.
 
 ## Documento institucional da CapiLoop
 

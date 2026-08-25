@@ -17,6 +17,14 @@ export type HelpTopic = {
   icon: string;
 };
 
+export type HelpNextAction = {
+  kind: "navigate" | "email";
+  label: string;
+  description: string;
+  icon: string;
+  route?: string;
+};
+
 export const HELP_TOPICS: HelpTopic[] = [
   {
     id: "reservation",
@@ -76,6 +84,57 @@ export type SupportEmailDraft = {
 
 export function getHelpTopic(id: HelpTopicId | null): HelpTopic | undefined {
   return HELP_TOPICS.find((topic) => topic.id === id);
+}
+
+export function getHelpNextAction(topicId: HelpTopicId): HelpNextAction {
+  switch (topicId) {
+    case "reservation":
+      return {
+        kind: "navigate",
+        label: "Ver minha sacola",
+        description: "Confira a reserva ativa, o horário e o comprovante antes de falar com o suporte.",
+        icon: "shopping-bag",
+        route: "/(tabs)/bag",
+      };
+    case "payment":
+      return {
+        kind: "navigate",
+        label: "Ver pedidos e comprovantes",
+        description: "Revise o status do pagamento e abra o comprovante do pedido correspondente.",
+        icon: "receipt-long",
+        route: "/order-history",
+      };
+    case "pickup":
+      return {
+        kind: "navigate",
+        label: "Abrir código de retirada",
+        description: "Na sua Sacola você encontra horário, endereço e o código para apresentar no local.",
+        icon: "qr-code-2",
+        route: "/(tabs)/bag",
+      };
+    case "account":
+      return {
+        kind: "navigate",
+        label: "Abrir meu perfil",
+        description: "Revise o acesso, seus dados e as preferências da conta no Perfil.",
+        icon: "person-outline",
+        route: "/(tabs)/profile",
+      };
+    case "partner":
+      return {
+        kind: "email",
+        label: "Falar sobre parceria",
+        description: "Prepare uma mensagem para iniciar o cadastro do seu estabelecimento com o time CapiLoop.",
+        icon: "handshake",
+      };
+    case "other":
+      return {
+        kind: "email",
+        label: "Escrever para o suporte",
+        description: "Envie o contexto do que aconteceu para que o time possa orientar você.",
+        icon: "mail-outline",
+      };
+  }
 }
 
 export function buildSupportEmail(topic: HelpTopic, details: string, accountEmail?: string | null): SupportEmailDraft {

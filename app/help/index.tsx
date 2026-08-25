@@ -8,7 +8,7 @@ import { Alert, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useAuth } from "@/hooks/use-auth";
-import { buildMailtoUrl, buildSupportEmail, getHelpTopic, HELP_TOPICS, type HelpTopicId } from "@/lib/help-center";
+import { buildMailtoUrl, buildSupportEmail, getHelpNextAction, getHelpTopic, HELP_TOPICS, SUPPORT_EMAIL, type HelpNextAction, type HelpTopicId, type SupportEmailDraft } from "@/lib/help-center";
 
 export default function HelpCenterScreen() {
   const router = useRouter();
@@ -16,13 +16,16 @@ export default function HelpCenterScreen() {
   const [selectedTopicId, setSelectedTopicId] = useState<HelpTopicId | null>(null);
   const [details, setDetails] = useState("");
   const [isOpeningMail, setIsOpeningMail] = useState(false);
+  const [manualDraft, setManualDraft] = useState<SupportEmailDraft | null>(null);
   const selectedTopic = useMemo(() => getHelpTopic(selectedTopicId), [selectedTopicId]);
+  const nextAction = useMemo(() => selectedTopic ? getHelpNextAction(selectedTopic.id) : null, [selectedTopic]);
 
   const selectTopic = async (topicId: HelpTopicId) => {
     if (Platform.OS !== "web") {
       await Haptics.selectionAsync();
     }
     setSelectedTopicId(topicId);
+    setManualDraft(null);
   };
 
   const sendSupportEmail = async () => {
@@ -30,6 +33,7 @@ export default function HelpCenterScreen() {
 
     setIsOpeningMail(true);
     const draft = buildSupportEmail(selectedTopic, details, user?.email);
+    setManualDraft(null);
 
     try {
       const nativeComposerAvailable = Platform.OS !== "web" && await MailComposer.isAvailableAsync();
@@ -43,6 +47,9 @@ export default function HelpCenterScreen() {
         if (result.status === MailComposer.MailComposerStatus.SENT) {
           if (Platform.OS !== "web") await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert("Mensagem enviada", "Recebemos seu pedido de ajuda. Em breve, o suporte retorna para você.");
+        } else {
+          setManualDraft(draft);
+          Alert.alert("Rascunho pronto", "Você pode tentar abrir o e-mail novamente ou usar os dados de contato exibidos nesta tela.");
         }
         return;
       }
@@ -53,13 +60,23 @@ export default function HelpCenterScreen() {
       await Linking.openURL(mailtoUrl);
     } catch {
       if (Platform.OS !== "web") await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setManualDraft(draft);
       Alert.alert(
-        "Não foi possível abrir o e-mail",
-        "Configure um cliente de e-mail no dispositivo e tente novamente. Você também pode escrever para claytonwpolati.usa@gmail.com.",
+        "E-mail não disponível",
+        "Deixamos os dados da mensagem nesta tela para você copiar e enviar de qualquer aplicativo de e-mail.",
       );
     } finally {
       setIsOpeningMail(false);
     }
+  };
+
+  const runNextAction = async (action: HelpNextAction) => {
+    if (Platform.OS !== "web") await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (action.kind === "email") {
+      await sendSupportEmail();
+      return;
+    }
+    if (action.route) router.push(action.route as never);
   };
 
   return (
@@ -126,6 +143,23 @@ export default function HelpCenterScreen() {
                     textAlignVertical="top"
                     style={styles.input}
                   />
+                  {nextAction ? (
+                    <View style={styles.nextStep}>
+                      <View style={styles.nextStepCopy}>
+                        <Text style={styles.nextStepLabel}>PRÓXIMO PASSO</Text>
+                        <Text style={styles.nextStepDescription}>{nextAction.description}</Text>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => void runNextAction(nextAction)}
+                        style={({ pressed }) => [styles.nextStepButton, pressed && styles.pressed]}
+                      >
+                        <MaterialIcons name={nextAction.icon as never} size={18} color="#151B14" />
+                        <Text style={styles.nextStepButtonText}>{nextAction.label}</Text>
+                        <MaterialIcons name="arrow-forward" size={17} color="#151B14" />
+                      </Pressable>
+                    </View>
+                  ) : null}
                 </View>
               ) : null}
             </View>
@@ -134,8 +168,8 @@ export default function HelpCenterScreen() {
         ListFooterComponent={
           selectedTopic ? (
             <View style={styles.footerCard}>
-              <Text style={styles.footerTitle}>Tudo pronto para pedir ajuda.</Text>
-              <Text style={styles.footerCopy}>Abriremos seu e-mail com o assunto e os detalhes já preenchidos. Você revisa e envia quando quiser.</Text>
+              <Text style={styles.footerTitle}>Ainda precisa de ajuda?</Text>
+              <Text style={styles.footerCopy}>Abra uma mensagem com o assunto e seus detalhes preenchidos. Você sempre revisa antes de enviar.</Text>
               <Pressable
                 accessibilityRole="button"
                 disabled={isOpeningMail}
@@ -143,8 +177,20 @@ export default function HelpCenterScreen() {
                 style={({ pressed }) => [styles.emailButton, (pressed || isOpeningMail) && styles.pressed, isOpeningMail && styles.disabled]}
               >
                 <MaterialIcons name="mail-outline" size={20} color="#FFFFFF" />
-                <Text style={styles.emailButtonText}>{isOpeningMail ? "Abrindo e-mail…" : "Enviar por e-mail"}</Text>
+                <Text style={styles.emailButtonText}>{isOpeningMail ? "Abrindo e-mail…" : "Falar com o suporte"}</Text>
               </Pressable>
+              {manualDraft ? (
+                <View style={styles.manualContactCard}>
+                  <View style={styles.manualContactHeading}>
+                    <MaterialIcons name="content-copy" size={16} color="#D9F8A4" />
+                    <Text style={styles.manualContactLabel}>ALTERNATIVA DISPONÍVEL</Text>
+                  </View>
+                  <Text style={styles.manualContactCopy}>Copie estes dados e envie de qualquer aplicativo de e-mail:</Text>
+                  <Text selectable style={styles.manualContactEmail}>{SUPPORT_EMAIL}</Text>
+                  <Text selectable style={styles.manualContactSubject}>Assunto: {manualDraft.subject}</Text>
+                  <Text selectable style={styles.manualContactBody}>{manualDraft.body}</Text>
+                </View>
+              ) : null}
               <Text style={styles.privacyNote}>Seu dispositivo abre a mensagem; a CapiLoop não envia e-mails sem sua confirmação.</Text>
             </View>
           ) : (
@@ -182,11 +228,24 @@ const styles = StyleSheet.create({
   answer: { color: "#354522", fontSize: 12, lineHeight: 17, marginTop: 8 },
   inputLabel: { color: "#556A20", fontSize: 11, fontWeight: "900", marginTop: 14, marginBottom: 7 },
   input: { minHeight: 84, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 13, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D7E7BB", color: "#151B14", fontSize: 12, lineHeight: 17 },
+  nextStep: { marginTop: 14, paddingTop: 13, borderTopWidth: 1, borderTopColor: "#D7E7BB" },
+  nextStepCopy: { marginBottom: 10 },
+  nextStepLabel: { color: "#556A20", fontSize: 10, letterSpacing: 0.8, fontWeight: "900" },
+  nextStepDescription: { color: "#4B5A3D", fontSize: 11, lineHeight: 16, marginTop: 4 },
+  nextStepButton: { minHeight: 44, paddingHorizontal: 12, borderRadius: 13, backgroundColor: "#A5DF00", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
+  nextStepButtonText: { flex: 1, color: "#151B14", fontSize: 12, fontWeight: "900" },
   footerCard: { borderRadius: 23, backgroundColor: "#151B14", marginTop: 15, padding: 19 },
   footerTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "900", letterSpacing: -0.4 },
   footerCopy: { color: "#D4DBCD", fontSize: 12, lineHeight: 17, marginTop: 6 },
   emailButton: { minHeight: 49, borderRadius: 15, backgroundColor: "#A5DF00", marginTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   emailButtonText: { color: "#151B14", fontSize: 14, fontWeight: "900" },
+  manualContactCard: { marginTop: 14, borderRadius: 14, padding: 12, backgroundColor: "#2A3526", borderWidth: 1, borderColor: "#53644C" },
+  manualContactHeading: { flexDirection: "row", alignItems: "center", gap: 6 },
+  manualContactLabel: { color: "#D9F8A4", fontSize: 10, fontWeight: "900", letterSpacing: 0.7 },
+  manualContactCopy: { color: "#D4DBCD", fontSize: 11, lineHeight: 16, marginTop: 7 },
+  manualContactEmail: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", marginTop: 7 },
+  manualContactSubject: { color: "#D9F8A4", fontSize: 11, lineHeight: 16, marginTop: 5 },
+  manualContactBody: { color: "#E8EDE3", fontSize: 11, lineHeight: 16, marginTop: 7 },
   privacyNote: { color: "#AAB3A3", fontSize: 10, lineHeight: 14, marginTop: 11, textAlign: "center" },
   emptyFooter: { paddingVertical: 20 },
   emptyFooterText: { color: "#8A9284", fontSize: 12, textAlign: "center" },
