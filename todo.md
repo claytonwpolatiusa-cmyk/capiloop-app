@@ -237,6 +237,10 @@
 - [x] Permitir anexar imagens e capturas de tela a uma solicitação de suporte.
 - [x] Criar chamados persistentes com protocolo e status de acompanhamento.
 - [x] Exibir histórico de chamados e atualizações de status no perfil do usuário.
+- [x] Permitir enviar e visualizar comentários dentro de cada chamado aberto.
+- [x] Adicionar filtros por status e ordenação na tela Meus chamados.
+- [x] Permitir avaliar com estrelas os chamados resolvidos.
+- [x] Validar segurança de acesso, filtros, conversa e avaliação de chamados.
 
 ## Documento institucional da CapiLoop
 

@@ -201,6 +201,33 @@ export const supportAttachments = mysqlTable("supportAttachments", {
 export type SupportAttachment = typeof supportAttachments.$inferSelect;
 export type InsertSupportAttachment = typeof supportAttachments.$inferInsert;
 
+/** Mensagens trocadas dentro de um chamado de suporte. */
+export const supportTicketMessages = mysqlTable("supportTicketMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  ticketId: int("ticketId").notNull().references(() => supportTickets.id),
+  userId: int("userId").notNull().references(() => users.id),
+  sender: mysqlEnum("sender", ["customer", "support", "system"]).default("customer").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SupportTicketMessage = typeof supportTicketMessages.$inferSelect;
+export type InsertSupportTicketMessage = typeof supportTicketMessages.$inferInsert;
+
+/** Avaliação opcional do cliente após a resolução do chamado. */
+export const supportTicketRatings = mysqlTable("supportTicketRatings", {
+  id: int("id").autoincrement().primaryKey(),
+  ticketId: int("ticketId").notNull().unique().references(() => supportTickets.id),
+  userId: int("userId").notNull().references(() => users.id),
+  stars: int("stars").notNull(),
+  comment: varchar("comment", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SupportTicketRating = typeof supportTicketRatings.$inferSelect;
+export type InsertSupportTicketRating = typeof supportTicketRatings.$inferInsert;
+
 /**
  * Relations for Drizzle ORM.
  */
