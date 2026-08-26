@@ -167,6 +167,41 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
 
 /**
+ * Chamados criados pelo cliente na Central de Ajuda.
+ * O protocolo é exibido ao cliente e os anexos ficam no armazenamento seguro.
+ */
+export const supportTickets = mysqlTable("supportTickets", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  protocol: varchar("protocol", { length: 32 }).notNull().unique(),
+  topic: varchar("topic", { length: 64 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  details: text("details"),
+  status: mysqlEnum("status", ["open", "under_review", "resolved", "closed"]).default("open").notNull(),
+  attachmentCount: int("attachmentCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type InsertSupportTicket = typeof supportTickets.$inferInsert;
+
+/** Metadados dos arquivos enviados pelo cliente como evidência do chamado. */
+export const supportAttachments = mysqlTable("supportAttachments", {
+  id: int("id").autoincrement().primaryKey(),
+  ticketId: int("ticketId").notNull().references(() => supportTickets.id),
+  userId: int("userId").notNull().references(() => users.id),
+  fileKey: text("fileKey").notNull(),
+  url: text("url").notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  mimeType: varchar("mimeType", { length: 128 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SupportAttachment = typeof supportAttachments.$inferSelect;
+export type InsertSupportAttachment = typeof supportAttachments.$inferInsert;
+
+/**
  * Relations for Drizzle ORM.
  */
 export const usersRelations = relations(users, ({ many }) => ({
@@ -174,6 +209,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   addresses: many(addresses),
   paymentMethods: many(paymentMethods),
   reservations: many(reservations),
+  supportTickets: many(supportTickets),
 }));
 
 export const partnersRelations = relations(partners, ({ one, many }) => ({
@@ -208,4 +244,14 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   reservation: one(reservations, { fields: [transactions.reservationId], references: [reservations.id] }),
   user: one(users, { fields: [transactions.userId], references: [users.id] }),
   paymentMethod: one(paymentMethods, { fields: [transactions.paymentMethodId], references: [paymentMethods.id] }),
+}));
+
+export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
+  user: one(users, { fields: [supportTickets.userId], references: [users.id] }),
+  attachments: many(supportAttachments),
+}));
+
+export const supportAttachmentsRelations = relations(supportAttachments, ({ one }) => ({
+  ticket: one(supportTickets, { fields: [supportAttachments.ticketId], references: [supportTickets.id] }),
+  user: one(users, { fields: [supportAttachments.userId], references: [users.id] }),
 }));

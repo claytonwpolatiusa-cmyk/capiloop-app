@@ -233,6 +233,10 @@
 - [x] Garantir que cada problema da Central de Ajuda ofereça uma próxima ação funcional e sem bloqueios.
 - [x] Criar alternativas de progresso quando o cliente de e-mail não estiver disponível.
 - [x] Validar as rotas de ajuda, retorno e contato em ambiente web e móvel.
+- [x] Adicionar assistente virtual simples com respostas para dúvidas frequentes.
+- [x] Permitir anexar imagens e capturas de tela a uma solicitação de suporte.
+- [x] Criar chamados persistentes com protocolo e status de acompanhamento.
+- [x] Exibir histórico de chamados e atualizações de status no perfil do usuário.
 
 ## Documento institucional da CapiLoop
 

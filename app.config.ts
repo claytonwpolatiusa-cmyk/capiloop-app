@@ -83,6 +83,12 @@ const config: ExpoConfig = {
     "expo-router",
     "expo-mail-composer",
     [
+      "expo-image-picker",
+      {
+        photosPermission: "Permita que o CapiLoop acesse imagens para anexar evidências ao suporte.",
+      },
+    ],
+    [
       "expo-web-browser",
       {
         experimentalLauncherActivity: true,
