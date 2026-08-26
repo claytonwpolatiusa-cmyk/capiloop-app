@@ -1,0 +1,58 @@
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+
+import { ScreenContainer } from "@/components/screen-container";
+import { useAuth } from "@/hooks/use-auth";
+import { getSupportTicketStatus, type SupportTicketStatus } from "@/lib/support-ticket-status";
+import { trpc } from "@/lib/trpc";
+
+const STATUS_OPTIONS: { value: SupportTicketStatus; label: string }[] = [
+  { value: "open", label: "Recebido" },
+  { value: "under_review", label: "Em análise" },
+  { value: "resolved", label: "Resolvido" },
+  { value: "closed", label: "Encerrado" },
+];
+
+function formatDate(value: Date | string) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value)).replace(".", "");
+}
+
+export default function AdminSupportScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const utils = trpc.useUtils();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [reply, setReply] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const accessQuery = trpc.adminSupport.access.useQuery(undefined, { enabled: Boolean(user) });
+  const isAdmin = accessQuery.data?.allowed === true;
+  const ticketsQuery = trpc.adminSupport.list.useQuery(undefined, { enabled: isAdmin });
+  const detailQuery = trpc.adminSupport.ticket.useQuery({ ticketId: selectedId ?? 0 }, { enabled: isAdmin && Boolean(selectedId) });
+  const refresh = () => { void utils.adminSupport.list.invalidate(); if (selectedId) void utils.adminSupport.ticket.invalidate({ ticketId: selectedId }); };
+  const replyMutation = trpc.adminSupport.reply.useMutation({ onSuccess: refresh });
+  const statusMutation = trpc.adminSupport.updateStatus.useMutation({ onSuccess: refresh });
+
+  if (accessQuery.isLoading) return <ScreenContainer className="flex-1" containerClassName="bg-[#F8FAF6]"><View style={styles.loading}><ActivityIndicator color="#4D611C" /></View></ScreenContainer>;
+  if (!isAdmin) return <ScreenContainer className="flex-1" containerClassName="bg-[#F8FAF6]"><View style={styles.restricted}><View style={styles.restrictedIcon}><MaterialIcons name="lock-outline" size={29} color="#4C5E43" /></View><Text style={styles.restrictedTitle}>Acesso restrito</Text><Text style={styles.restrictedCopy}>Este painel está disponível apenas para membros autorizados da equipe de suporte.</Text><Pressable onPress={() => router.back()} style={styles.primary}><Text style={styles.primaryText}>Voltar</Text></Pressable></View></ScreenContainer>;
+
+  const selected = detailQuery.data;
+  const sendReply = async () => {
+    if (!selectedId || reply.trim().length < 2) { setError("Escreva ao menos dois caracteres para responder."); return; }
+    setError(null);
+    try { await replyMutation.mutateAsync({ ticketId: selectedId, body: reply.trim() }); setReply(""); } catch (reason) { setError(reason instanceof Error ? reason.message : "Não foi possível enviar a resposta."); }
+  };
+  const changeStatus = async (status: SupportTicketStatus) => {
+    if (!selectedId) return;
+    try { await statusMutation.mutateAsync({ ticketId: selectedId, status }); } catch (reason) { setError(reason instanceof Error ? reason.message : "Não foi possível atualizar o status."); }
+  };
+
+  if (selectedId) return <ScreenContainer className="flex-1" containerClassName="bg-[#F8FAF6]"><FlatList data={selected?.messages ?? []} keyExtractor={(item) => String(item.id)} contentContainerStyle={styles.content} ListHeaderComponent={<View><Pressable onPress={() => { setSelectedId(null); setError(null); }} style={styles.back}><MaterialIcons name="arrow-back" size={21} color="#151B14" /><Text style={styles.backText}>Chamados</Text></Pressable>{detailQuery.isLoading ? <View style={styles.loading}><ActivityIndicator color="#4D611C" /></View> : selected ? <View><Text style={styles.eyebrow}>{selected.protocol}</Text><Text style={styles.title}>{selected.subject}</Text><Text style={styles.customer}>{selected.customerName || "Cliente"} · {selected.customerEmail || "sem e-mail"}</Text><Text style={styles.details}>{selected.details || "Sem descrição adicional."}</Text><Text style={styles.sectionLabel}>CONVERSA</Text></View> : null}</View>} renderItem={({ item }) => <View style={[styles.message, item.sender === "support" ? styles.teamMessage : styles.customerMessage]}><Text style={styles.sender}>{item.sender === "support" ? "Equipe CapiLoop" : "Cliente"}</Text><Text style={styles.messageText}>{item.body}</Text><Text style={styles.messageDate}>{formatDate(item.createdAt)}</Text></View>} ListFooterComponent={selected ? <View style={styles.footer}>{error ? <Text style={styles.error}>{error}</Text> : null}<Text style={styles.sectionLabel}>STATUS</Text><View style={styles.statusRow}>{STATUS_OPTIONS.map((option) => <Pressable key={option.value} onPress={() => void changeStatus(option.value)} style={[styles.statusButton, selected.status === option.value && styles.statusButtonActive]}><Text style={[styles.statusButtonText, selected.status === option.value && styles.statusButtonTextActive]}>{option.label}</Text></Pressable>)}</View><View style={styles.composer}><Text style={styles.composeTitle}>Responder ao cliente</Text><TextInput value={reply} onChangeText={setReply} placeholder="Escreva uma orientação clara…" placeholderTextColor="#90998B" style={styles.input} multiline maxLength={1000} textAlignVertical="top" /><Pressable disabled={replyMutation.isPending} onPress={() => void sendReply()} style={[styles.primary, replyMutation.isPending && styles.disabled]}><MaterialIcons name="send" size={17} color="#151B14" /><Text style={styles.primaryText}>{replyMutation.isPending ? "Enviando…" : "Enviar resposta"}</Text></Pressable></View></View> : null} /></ScreenContainer>;
+
+  return <ScreenContainer className="flex-1" containerClassName="bg-[#F8FAF6]"><FlatList data={ticketsQuery.data ?? []} keyExtractor={(item) => String(item.id)} contentContainerStyle={styles.content} ListHeaderComponent={<View><Pressable onPress={() => router.back()} style={styles.back}><MaterialIcons name="arrow-back" size={21} color="#151B14" /><Text style={styles.backText}>Perfil</Text></Pressable><View style={styles.heroIcon}><MaterialIcons name="support-agent" size={27} color="#151B14" /></View><Text style={styles.eyebrow}>EQUIPE CAPILOOP</Text><Text style={styles.title}>Painel de suporte</Text><Text style={styles.intro}>Acompanhe protocolos, responda clientes e mantenha o andamento do atendimento atualizado.</Text></View>} renderItem={({ item }) => { const status = getSupportTicketStatus(item.status as SupportTicketStatus); return <Pressable onPress={() => setSelectedId(item.id)} style={styles.ticket}><View style={styles.ticketHead}><Text style={styles.protocol}>{item.protocol}</Text><View style={[styles.statusPill, { backgroundColor: status.background }]}><Text style={[styles.statusPillText, { color: status.color }]}>{status.label}</Text></View></View><Text style={styles.subject}>{item.subject}</Text><Text style={styles.customer}>{item.customerName || "Cliente"} · {item.customerEmail || "sem e-mail"}</Text><Text style={styles.updated}>Atualizado {formatDate(item.updatedAt)}</Text></Pressable>; }} ListEmptyComponent={ticketsQuery.isLoading ? <View style={styles.loading}><ActivityIndicator color="#4D611C" /></View> : <View style={styles.empty}><Text style={styles.emptyText}>Não há chamados para atender.</Text></View>} /></ScreenContainer>;
+}
+
+const styles = StyleSheet.create({
+  content: { padding: 20, paddingBottom: 36, flexGrow: 1 }, back: { minHeight: 42, alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 10 }, backText: { color: "#151B14", fontSize: 13, fontWeight: "900" }, heroIcon: { width: 52, height: 52, borderRadius: 18, backgroundColor: "#A5DF00", alignItems: "center", justifyContent: "center", marginTop: 17, marginBottom: 16 }, eyebrow: { color: "#66715F", fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, title: { color: "#151B14", fontSize: 29, letterSpacing: -1, fontWeight: "900", marginTop: 6 }, intro: { color: "#66715F", fontSize: 13, lineHeight: 19, marginTop: 9, marginBottom: 20 }, ticket: { backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1, borderColor: "#E5EAE1", padding: 15, marginBottom: 10 }, ticketHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 9 }, protocol: { color: "#66715F", fontSize: 10, fontWeight: "900", letterSpacing: 0.7 }, statusPill: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 999 }, statusPillText: { fontSize: 10, fontWeight: "900" }, subject: { color: "#151B14", fontSize: 15, fontWeight: "900", marginTop: 12 }, customer: { color: "#66715F", fontSize: 11, lineHeight: 16, marginTop: 5 }, updated: { color: "#8A9484", fontSize: 10, marginTop: 12 }, details: { color: "#4C5B47", fontSize: 13, lineHeight: 19, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E5EAE1", borderRadius: 15, padding: 13, marginTop: 15, marginBottom: 20 }, sectionLabel: { color: "#6C7768", fontSize: 10, fontWeight: "900", letterSpacing: 1, marginBottom: 9 }, message: { padding: 13, borderRadius: 16, marginTop: 9, maxWidth: "88%" }, teamMessage: { backgroundColor: "#EAF7C8", alignSelf: "flex-end", borderBottomRightRadius: 4 }, customerMessage: { backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E5EAE1", alignSelf: "flex-start", borderBottomLeftRadius: 4 }, sender: { color: "#51614C", fontSize: 10, fontWeight: "900" }, messageText: { color: "#20291F", fontSize: 13, lineHeight: 19, marginTop: 5 }, messageDate: { color: "#74806E", fontSize: 9, fontWeight: "700", marginTop: 8 }, footer: { marginTop: 20 }, statusRow: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }, statusButton: { backgroundColor: "#EEF1EB", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 8 }, statusButtonActive: { backgroundColor: "#A5DF00" }, statusButtonText: { color: "#63705D", fontSize: 10, fontWeight: "900" }, statusButtonTextActive: { color: "#151B14" }, composer: { backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1, borderColor: "#E5EAE1", padding: 14 }, composeTitle: { color: "#151B14", fontSize: 14, fontWeight: "900", marginBottom: 10 }, input: { minHeight: 88, borderWidth: 1, borderColor: "#DCE4D6", borderRadius: 13, paddingHorizontal: 12, paddingVertical: 10, color: "#1F291D", fontSize: 13, lineHeight: 18, backgroundColor: "#FCFDF9" }, primary: { minHeight: 45, backgroundColor: "#A5DF00", borderRadius: 14, marginTop: 10, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 7 }, primaryText: { color: "#151B14", fontSize: 12, fontWeight: "900" }, disabled: { opacity: 0.55 }, error: { color: "#9B3428", backgroundColor: "#FFE9E5", borderRadius: 12, padding: 10, fontSize: 12, marginBottom: 10 }, loading: { paddingVertical: 52, alignItems: "center" }, empty: { paddingVertical: 52, alignItems: "center" }, emptyText: { color: "#6B7566", fontSize: 13, fontWeight: "800" }, restricted: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 28 }, restrictedIcon: { width: 58, height: 58, borderRadius: 20, backgroundColor: "#EDF7D9", alignItems: "center", justifyContent: "center" }, restrictedTitle: { color: "#151B14", fontSize: 22, fontWeight: "900", marginTop: 16 }, restrictedCopy: { color: "#6B7566", fontSize: 13, lineHeight: 19, textAlign: "center", marginTop: 8 },
+});

@@ -241,6 +241,11 @@
 - [x] Adicionar filtros por status e ordenação na tela Meus chamados.
 - [x] Permitir avaliar com estrelas os chamados resolvidos.
 - [x] Validar segurança de acesso, filtros, conversa e avaliação de chamados.
+- [x] Criar painel administrativo simples para listar chamados e responder como equipe de suporte.
+- [x] Proteger o painel e as ações da equipe com autorização administrativa.
+- [x] Registrar a leitura das mensagens da equipe pelo usuário.
+- [x] Exibir badges de novas respostas da equipe na lista e no detalhe dos chamados.
+- [x] Validar permissão administrativa, envio de resposta e reconhecimento das notificações.
 
 ## Documento institucional da CapiLoop
 

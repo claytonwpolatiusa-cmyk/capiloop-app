@@ -1,10 +1,10 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { supportAttachments, supportTicketMessages, supportTicketRatings, supportTickets } from "../../drizzle/schema";
+import { supportAttachments, supportTicketMessages, supportTicketRatings, supportTickets, users } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { storagePut } from "../storage";
-import { protectedProcedure, router } from "../_core/trpc";
+import { adminProcedure, protectedProcedure, router } from "../_core/trpc";
 
 const MAX_ATTACHMENTS = 3;
 const MAX_BASE64_CHARS = 3_000_000;
@@ -39,6 +39,7 @@ export const supportRouter = router({
         details: supportTickets.details,
         status: supportTickets.status,
         attachmentCount: supportTickets.attachmentCount,
+        hasUnreadSupportReply: supportTickets.hasUnreadSupportReply,
         createdAt: supportTickets.createdAt,
         updatedAt: supportTickets.updatedAt,
       })
@@ -108,6 +109,7 @@ export const supportRouter = router({
           details: supportTickets.details,
           status: supportTickets.status,
           attachmentCount: supportTickets.attachmentCount,
+          hasUnreadSupportReply: supportTickets.hasUnreadSupportReply,
           createdAt: supportTickets.createdAt,
           updatedAt: supportTickets.updatedAt,
         })
@@ -151,6 +153,17 @@ export const supportRouter = router({
       return { success: true };
     }),
 
+  markSupportRepliesRead: protectedProcedure
+    .input(z.object({ ticketId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco de dados indisponível.");
+      await db.update(supportTickets)
+        .set({ hasUnreadSupportReply: 0 })
+        .where(and(eq(supportTickets.id, input.ticketId), eq(supportTickets.userId, ctx.user.id)));
+      return { success: true };
+    }),
+
   markResolved: protectedProcedure
     .input(z.object({ ticketId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
@@ -184,6 +197,84 @@ export const supportRouter = router({
       const values = { stars: input.stars, comment: input.comment?.trim() || null, updatedAt: new Date() };
       if (existing) await db.update(supportTicketRatings).set(values).where(eq(supportTicketRatings.id, existing.id));
       else await db.insert(supportTicketRatings).values({ ticketId: input.ticketId, userId: ctx.user.id, ...values });
+      return { success: true };
+    }),
+});
+
+const adminTicketInput = z.object({ ticketId: z.number().int().positive() });
+const ticketStatusSchema = z.enum(["open", "under_review", "resolved", "closed"]);
+
+export const supportAdminRouter = router({
+  access: protectedProcedure.query(({ ctx }) => ({ allowed: ctx.user.role === "admin" })),
+
+  list: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Banco de dados indisponível.");
+    return db.select({
+      id: supportTickets.id,
+      protocol: supportTickets.protocol,
+      topic: supportTickets.topic,
+      subject: supportTickets.subject,
+      status: supportTickets.status,
+      attachmentCount: supportTickets.attachmentCount,
+      createdAt: supportTickets.createdAt,
+      updatedAt: supportTickets.updatedAt,
+      customerName: users.name,
+      customerEmail: users.email,
+    }).from(supportTickets).innerJoin(users, eq(users.id, supportTickets.userId)).orderBy(desc(supportTickets.updatedAt));
+  }),
+
+  ticket: adminProcedure.input(adminTicketInput).query(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Banco de dados indisponível.");
+    const [ticket] = await db.select({
+      id: supportTickets.id,
+      userId: supportTickets.userId,
+      protocol: supportTickets.protocol,
+      topic: supportTickets.topic,
+      subject: supportTickets.subject,
+      details: supportTickets.details,
+      status: supportTickets.status,
+      attachmentCount: supportTickets.attachmentCount,
+      createdAt: supportTickets.createdAt,
+      updatedAt: supportTickets.updatedAt,
+      customerName: users.name,
+      customerEmail: users.email,
+    }).from(supportTickets).innerJoin(users, eq(users.id, supportTickets.userId)).where(eq(supportTickets.id, input.ticketId));
+    if (!ticket) throw new Error("Chamado não encontrado.");
+    const messages = await db.select({
+      id: supportTicketMessages.id,
+      sender: supportTicketMessages.sender,
+      body: supportTicketMessages.body,
+      createdAt: supportTicketMessages.createdAt,
+    }).from(supportTicketMessages).where(eq(supportTicketMessages.ticketId, input.ticketId)).orderBy(asc(supportTicketMessages.createdAt));
+    return { ...ticket, messages };
+  }),
+
+  reply: adminProcedure
+    .input(z.object({ ticketId: z.number().int().positive(), body: z.string().trim().min(2).max(1_000), status: ticketStatusSchema.optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco de dados indisponível.");
+      const [ticket] = await db.select({ userId: supportTickets.userId, status: supportTickets.status }).from(supportTickets).where(eq(supportTickets.id, input.ticketId));
+      if (!ticket) throw new Error("Chamado não encontrado.");
+      if (ticket.status === "closed") throw new Error("Este chamado está encerrado e não aceita novas respostas.");
+      await db.insert(supportTicketMessages).values({ ticketId: input.ticketId, userId: ticket.userId, sender: "support", body: input.body });
+      await db.update(supportTickets).set({
+        status: input.status ?? (ticket.status === "open" ? "under_review" : ticket.status),
+        hasUnreadSupportReply: 1,
+        updatedAt: new Date(),
+      }).where(eq(supportTickets.id, input.ticketId));
+      return { success: true };
+    }),
+
+  updateStatus: adminProcedure
+    .input(adminTicketInput.extend({ status: ticketStatusSchema }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco de dados indisponível.");
+      const result = await db.update(supportTickets).set({ status: input.status, updatedAt: new Date() }).where(eq(supportTickets.id, input.ticketId));
+      if (Number(result[0].affectedRows) !== 1) throw new Error("Chamado não encontrado.");
       return { success: true };
     }),
 });

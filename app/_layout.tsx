@@ -24,6 +24,7 @@ export default function RootLayout() {
             <Stack.Screen name="help/index" options={{ animation: "fade_from_bottom", animationDuration: 240 }} />
             <Stack.Screen name="support-tickets" options={{ animation: "fade_from_bottom", animationDuration: 240 }} />
             <Stack.Screen name="support-ticket/[id]" options={{ animation: "fade_from_bottom", animationDuration: 240 }} />
+            <Stack.Screen name="admin/support" options={{ animation: "fade_from_bottom", animationDuration: 240 }} />
           </Stack>
         </CatalogProvider>
       </CapiLoopProvider>

@@ -179,6 +179,7 @@ export const supportTickets = mysqlTable("supportTickets", {
   details: text("details"),
   status: mysqlEnum("status", ["open", "under_review", "resolved", "closed"]).default("open").notNull(),
   attachmentCount: int("attachmentCount").default(0).notNull(),
+  hasUnreadSupportReply: int("hasUnreadSupportReply").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `supportTickets` ADD `hasUnreadSupportReply` int DEFAULT 0 NOT NULL;
