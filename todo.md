@@ -252,3 +252,23 @@
 - [x] Consolidar uma explicação completa da CapiLoop, do produto, da marca e da operação.
 - [x] Documentar o fluxo de clientes, parceiros, pagamentos, retirada e segurança.
 - [x] Registrar as entregas implementadas, limitações atuais e próximos passos do projeto.
+
+
+## Auditoria de lançamento
+
+- [x] Auditar e classificar o que está pronto, em homologação e pendente no app, backend e portal.
+- [x] Confirmar credenciais de produção, pagamentos, publicação nas lojas e operação com restaurantes.
+- [x] Documentar o fluxo real de cadastro, aprovação, publicação de sacolas, reserva, pagamento e retirada.
+- [x] Preparar checklist priorizado de lançamento e plano de piloto controlado.
+
+
+## Pendências descobertas na auditoria de lançamento
+
+- [ ] Decidir e implementar a aprovação manual efetiva de parceiros antes da publicação; o cadastro atual grava o parceiro como aprovado automaticamente.
+- [ ] Inserir credenciais de produção do Mercado Pago e concluir homologação de PIX, cartão e webhooks.
+- [ ] Validar ou remover a opção Apple Pay até existir processamento nativo testado em iOS.
+- [ ] Cadastrar restaurantes-piloto e publicar sacolas reais no ambiente correto.
+- [ ] Executar o teste ponta a ponta: cliente → reserva → pagamento → comprovante → retirada.
+- [ ] Criar e validar builds de produção para Apple App Store e Google Play.
+- [ ] Finalizar termos de uso, política de privacidade, cancelamento, reembolso e operação de suporte.
+- [ ] Configurar monitoramento, backups e procedimento de resposta a incidentes.
