@@ -10,6 +10,9 @@ export type Reservation = {
   code: string;
   createdAt: string;
   paymentStatus: "pending" | "confirmed" | "failed";
+  reservationStatus?: "pending" | "confirmed" | "picked_up" | "cancelled" | "disputed";
+  disputeStatus?: "open" | "under_review" | "approved" | "rejected" | "refunded";
+  refundStatus?: "not_requested" | "pending" | "processing" | "completed" | "failed";
   paymentMethod?: string;
   pickupTime?: string;
   offerSnapshot?: Pick<Offer, "store" | "subtitle" | "pickupWindow" | "address" | "price">;
@@ -26,6 +29,7 @@ type CapiLoopContextValue = {
   reserveOffer: (offer: Offer, pickupTime?: string) => Promise<Reservation>;
   recordRemoteReservation: (input: { id: string; offer: Offer; code: string; pickupTime?: string; paymentMethod?: string }) => Promise<Reservation>;
   updateRemoteReservationStatus: (id: string, paymentStatus: Reservation["paymentStatus"]) => Promise<void>;
+  updateReservationDispute: (id: string, disputeStatus: NonNullable<Reservation["disputeStatus"]>, refundStatus?: Reservation["refundStatus"]) => Promise<void>;
   isFavoriteStore: (store: string) => boolean;
   toggleFavoriteStore: (store: string) => Promise<void>;
   isFavoriteAlertEnabled: (store: string) => boolean;
@@ -94,6 +98,12 @@ export function CapiLoopProvider({ children }: { children: ReactNode }) {
     await persist(nextReservations, impact, favoriteStores, mutedFavoriteStores);
   }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
 
+  const updateReservationDispute = useCallback(async (id: string, disputeStatus: NonNullable<Reservation["disputeStatus"]>, refundStatus?: Reservation["refundStatus"]) => {
+    const nextReservations = reservations.map((reservation) => reservation.id === id ? { ...reservation, reservationStatus: "disputed" as const, disputeStatus, refundStatus: refundStatus ?? reservation.refundStatus } : reservation);
+    setReservations(nextReservations);
+    await persist(nextReservations, impact, favoriteStores, mutedFavoriteStores);
+  }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
+
   const isFavoriteStore = useCallback((store: string) => favoriteStores.includes(store), [favoriteStores]);
   const toggleFavoriteStore = useCallback(async (store: string) => {
     const isRemoving = favoriteStores.includes(store);
@@ -115,8 +125,8 @@ export function CapiLoopProvider({ children }: { children: ReactNode }) {
   }, [favoriteStores, impact, mutedFavoriteStores, persist, reservations]);
 
   const value = useMemo(
-    () => ({ reservations, impact, favoriteStores, mutedFavoriteStores, isReady, reserveOffer, recordRemoteReservation, updateRemoteReservationStatus, isFavoriteStore, toggleFavoriteStore, isFavoriteAlertEnabled, toggleFavoriteAlert }),
-    [favoriteStores, impact, isFavoriteAlertEnabled, isFavoriteStore, isReady, mutedFavoriteStores, recordRemoteReservation, reservations, reserveOffer, toggleFavoriteAlert, toggleFavoriteStore, updateRemoteReservationStatus],
+    () => ({ reservations, impact, favoriteStores, mutedFavoriteStores, isReady, reserveOffer, recordRemoteReservation, updateRemoteReservationStatus, updateReservationDispute, isFavoriteStore, toggleFavoriteStore, isFavoriteAlertEnabled, toggleFavoriteAlert }),
+    [favoriteStores, impact, isFavoriteAlertEnabled, isFavoriteStore, isReady, mutedFavoriteStores, recordRemoteReservation, reservations, reserveOffer, toggleFavoriteAlert, toggleFavoriteStore, updateRemoteReservationStatus, updateReservationDispute],
   );
 
   return <CapiLoopContext.Provider value={value}>{children}</CapiLoopContext.Provider>;

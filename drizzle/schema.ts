@@ -45,6 +45,13 @@ export const partners = mysqlTable("partners", {
   cnpjVerifiedAt: timestamp("cnpjVerifiedAt"),
   lastSignedInAt: timestamp("lastSignedInAt"),
   status: mysqlEnum("status", ["pending", "approved", "rejected", "suspended"]).default("pending").notNull(),
+  reviewedBy: varchar("reviewedBy", { length: 320 }),
+  reviewNote: text("reviewNote"),
+  reviewNotes: text("reviewNotes"),
+  reviewedAt: timestamp("reviewedAt"),
+  mercadoPagoCollectorId: varchar("mercadoPagoCollectorId", { length: 128 }),
+  reliabilityScore: decimal("reliabilityScore", { precision: 5, scale: 2 }).default("100.00").notNull(),
+  disputeCount: int("disputeCount").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -77,13 +84,16 @@ export const bags = mysqlTable("bags", {
   originalPrice: decimal("originalPrice", { precision: 10, scale: 2 }).notNull(),
   salePrice: decimal("salePrice", { precision: 10, scale: 2 }).notNull(),
   expectedItems: text("expectedItems").notNull(),
+  pickupDate: varchar("pickupDate", { length: 10 }),
   pickupStartTime: varchar("pickupStartTime", { length: 8 }).notNull(),
   pickupEndTime: varchar("pickupEndTime", { length: 8 }).notNull(),
+  pickupStartAt: timestamp("pickupStartAt"),
+  pickupEndAt: timestamp("pickupEndAt"),
   quantity: int("quantity").notNull().default(1),
   reserved: int("reserved").notNull().default(0),
   co2Kg: decimal("co2Kg", { precision: 5, scale: 2 }).notNull(),
   imageUrl: text("imageUrl"),
-  status: mysqlEnum("status", ["active", "sold_out", "cancelled"]).default("active").notNull(),
+  status: mysqlEnum("status", ["active", "sold_out", "expired", "cancelled"]).default("active").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -137,9 +147,11 @@ export const reservations = mysqlTable("reservations", {
   userId: int("userId").notNull().references(() => users.id),
   bagId: int("bagId").notNull().references(() => bags.id),
   code: varchar("code", { length: 20 }).unique().notNull(),
-  status: mysqlEnum("status", ["pending", "confirmed", "picked_up", "cancelled"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "confirmed", "picked_up", "cancelled", "disputed"]).default("pending").notNull(),
   pickupTime: varchar("pickupTime", { length: 8 }),
   pickupDate: varchar("pickupDate", { length: 10 }),
+  lockExpiresAt: timestamp("lockExpiresAt"),
+  confirmedAt: timestamp("confirmedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -155,6 +167,13 @@ export const transactions = mysqlTable("transactions", {
   reservationId: int("reservationId").notNull().references(() => reservations.id),
   userId: int("userId").notNull().references(() => users.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  /** Valor bruto da sacola pertencente ao parceiro. */
+  totalBagValue: decimal("totalBagValue", { precision: 10, scale: 2 }),
+  /** Comissão da plataforma, separada do valor bruto da sacola. */
+  platformCommissionFee: decimal("platformCommissionFee", { precision: 10, scale: 2 }),
+  /** Valor líquido destinado ao parceiro após a comissão. */
+  restaurantNetValue: decimal("restaurantNetValue", { precision: 10, scale: 2 }),
+  splitStatus: mysqlEnum("splitStatus", ["not_started", "pending", "completed", "failed"]).default("not_started").notNull(),
   paymentMethodId: int("paymentMethodId").references(() => paymentMethods.id),
   status: mysqlEnum("status", ["pending", "completed", "failed", "refunded"]).default("pending").notNull(),
   paymentGatewayId: varchar("paymentGatewayId", { length: 255 }),
@@ -165,6 +184,26 @@ export const transactions = mysqlTable("transactions", {
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
+
+/** Disputas abertas pelo cliente para problemas de retirada ou indisponibilidade da sacola. */
+export const reservationDisputes = mysqlTable("reservationDisputes", {
+  id: int("id").autoincrement().primaryKey(),
+  reservationId: int("reservationId").notNull().unique().references(() => reservations.id),
+  userId: int("userId").notNull().references(() => users.id),
+  reason: mysqlEnum("reason", ["bag_unavailable", "pickup_issue", "quality_issue", "payment_issue", "other"]).notNull(),
+  details: text("details"),
+  status: mysqlEnum("status", ["open", "under_review", "approved", "rejected", "refunded"]).default("open").notNull(),
+  refundStatus: mysqlEnum("refundStatus", ["not_requested", "pending", "processing", "completed", "failed"]).default("not_requested").notNull(),
+  refundAmount: decimal("refundAmount", { precision: 10, scale: 2 }),
+  paymentGatewayRefundId: varchar("paymentGatewayRefundId", { length: 255 }),
+  penaltyPoints: int("penaltyPoints").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+});
+
+export type ReservationDispute = typeof reservationDisputes.$inferSelect;
+export type InsertReservationDispute = typeof reservationDisputes.$inferInsert;
 
 /**
  * Chamados criados pelo cliente na Central de Ajuda.
@@ -263,15 +302,21 @@ export const paymentMethodsRelations = relations(paymentMethods, ({ one }) => ({
   user: one(users, { fields: [paymentMethods.userId], references: [users.id] }),
 }));
 
-export const reservationsRelations = relations(reservations, ({ one }) => ({
+export const reservationsRelations = relations(reservations, ({ one, many }) => ({
   user: one(users, { fields: [reservations.userId], references: [users.id] }),
   bag: one(bags, { fields: [reservations.bagId], references: [bags.id] }),
+  disputes: many(reservationDisputes),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
   reservation: one(reservations, { fields: [transactions.reservationId], references: [reservations.id] }),
   user: one(users, { fields: [transactions.userId], references: [users.id] }),
   paymentMethod: one(paymentMethods, { fields: [transactions.paymentMethodId], references: [paymentMethods.id] }),
+}));
+
+export const reservationDisputesRelations = relations(reservationDisputes, ({ one }) => ({
+  reservation: one(reservations, { fields: [reservationDisputes.reservationId], references: [reservations.id] }),
+  user: one(users, { fields: [reservationDisputes.userId], references: [users.id] }),
 }));
 
 export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({

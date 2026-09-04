@@ -316,3 +316,21 @@ O brand book, a logo, a capivara 3D, os textos de posicionamento e o material in
 ---
 
 *Este documento é um diagnóstico de prontidão baseado no estado atual do projeto e deve ser atualizado após cada rodada de homologação.*
+
+
+## 13. Atualização técnica — pilares de negócio implementados
+
+A rodada atual adicionou os seguintes controles de backend e aplicativo:
+
+- [x] Aprovação manual de parceiros com estados `pending`, `approved`, `rejected` e `suspended`; parceiros pendentes não podem publicar sacolas.
+- [x] Separação persistida entre `total_bag_value`, `platform_commission_fee` e `restaurant_net_value`.
+- [x] Payload de split preparado para PIX, cartão e Checkout Pro, com `collector_id` e metadados de reconciliação quando configurados.
+- [x] Expiração de sacolas pela janela de retirada, com sweep periódico e filtro de catálogo.
+- [x] Lock condicional de estoque durante o checkout e liberação de locks pendentes expirados.
+- [x] Disputa protegida no comprovante com motivo, histórico, reembolso idempotente e penalização interna do parceiro.
+- [x] Fila administrativa de aprovação disponível no perfil de usuários autorizados.
+- [x] Testes unitários para expiração, split, lock e pesos de penalização.
+
+Esses itens estão **prontos no código**, mas não transformam pagamentos, reembolsos ou split em homologados. Ainda é necessário testar com credenciais válidas, pagamentos reais de teste, webhook público, recebedores Mercado Pago configurados e uma operação-piloto com restaurantes.
+
+A proposta detalhada de modelos, estados e fluxos está em [`ARQUITETURA_REGRAS_NEGOCIO.md`](./ARQUITETURA_REGRAS_NEGOCIO.md).

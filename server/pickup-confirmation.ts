@@ -1,4 +1,4 @@
-export type PickupConfirmationState = "pending" | "confirmed" | "picked_up" | "cancelled";
+export type PickupConfirmationState = "pending" | "confirmed" | "picked_up" | "cancelled" | "disputed";
 
 export function getPickupConfirmationError(input: {
   belongsToPartner: boolean;

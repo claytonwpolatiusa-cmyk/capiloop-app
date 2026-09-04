@@ -17,6 +17,7 @@ import {
 } from "./_core/partner-auth";
 import { getDb } from "./db";
 import { getPickupConfirmationError } from "./pickup-confirmation";
+import { runBagLifecycleSweep } from "./bag-lifecycle";
 
 type PartnerRequest = Request & { partner?: Partner };
 
@@ -41,6 +42,7 @@ const createBagSchema = z
     originalPrice: z.coerce.number().positive(),
     salePrice: z.coerce.number().positive(),
     expectedItems: z.string().trim().min(3).max(2000),
+    pickupDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     pickupStartTime: z.string().regex(/^\d{2}:\d{2}$/),
     pickupEndTime: z.string().regex(/^\d{2}:\d{2}$/),
     quantity: z.coerce.number().int().min(1).max(500),
@@ -57,6 +59,14 @@ const pickupCodeSchema = z
   .trim()
   .toUpperCase()
   .regex(/^CPL-[A-Z0-9-]{4,16}$/, "Informe um código de comprovante CapiLoop válido.");
+
+function pickupDateOrToday(value?: string) {
+  return value || new Date().toISOString().slice(0, 10);
+}
+
+function pickupTimestamp(date: string, time: string) {
+  return new Date(`${date}T${time}:00-03:00`);
+}
 
 function toPartnerJson(partner: Partner) {
   return {
@@ -154,11 +164,11 @@ export function registerPartnerRoutes(app: Router) {
         passwordHash,
         cnpjStatus: cnpj.status,
         cnpjVerifiedAt: new Date(),
-        status: "approved",
+        status: "pending",
       });
 
       res.status(201).json({
-        message: "Conta criada e CNPJ validado. Você já pode cadastrar sacolas.",
+        message: "Cadastro recebido e CNPJ validado. Aguarde a aprovação da CapiLoop para começar a cadastrar sacolas.",
         cnpj: { legalName: cnpj.legalName, tradeName: cnpj.tradeName, status: cnpj.status },
       });
     } catch (error) {
@@ -216,9 +226,13 @@ export function registerPartnerRoutes(app: Router) {
       const input = createBagSchema.parse(req.body);
       const db = await getDb();
       if (!db) throw new PartnerAuthError("Banco de dados indisponível");
+      const pickupDate = pickupDateOrToday(input.pickupDate);
       await db.insert(bags).values({
         partnerId: req.partner!.id,
         category: input.category,
+        pickupDate,
+        pickupStartAt: pickupTimestamp(pickupDate, input.pickupStartTime),
+        pickupEndAt: pickupTimestamp(pickupDate, input.pickupEndTime),
         originalPrice: input.originalPrice.toFixed(2),
         salePrice: input.salePrice.toFixed(2),
         expectedItems: input.expectedItems,
@@ -255,8 +269,12 @@ export function registerPartnerRoutes(app: Router) {
         return;
       }
 
+      const pickupDate = pickupDateOrToday(input.pickupDate ?? bag.pickupDate ?? undefined);
       await db.update(bags).set({
         category: input.category,
+        pickupDate,
+        pickupStartAt: pickupTimestamp(pickupDate, input.pickupStartTime),
+        pickupEndAt: pickupTimestamp(pickupDate, input.pickupEndTime),
         originalPrice: input.originalPrice.toFixed(2),
         salePrice: input.salePrice.toFixed(2),
         expectedItems: input.expectedItems,
@@ -422,6 +440,7 @@ export function registerPartnerRoutes(app: Router) {
     try {
       const db = await getDb();
       if (!db) throw new PartnerAuthError("Banco de dados indisponível");
+      await runBagLifecycleSweep(db);
       const result = await db
         .select({ bag: bags, partner: partners })
         .from(bags)

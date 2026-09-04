@@ -264,7 +264,7 @@
 
 ## Pendências descobertas na auditoria de lançamento
 
-- [ ] Decidir e implementar a aprovação manual efetiva de parceiros antes da publicação; o cadastro atual grava o parceiro como aprovado automaticamente.
+- [x] Decidir e implementar a aprovação manual efetiva de parceiros antes da publicação; o cadastro atual grava o parceiro como aprovado automaticamente.
 - [ ] Inserir credenciais de produção do Mercado Pago e concluir homologação de PIX, cartão e webhooks.
 - [ ] Validar ou remover a opção Apple Pay até existir processamento nativo testado em iOS.
 - [ ] Cadastrar restaurantes-piloto e publicar sacolas reais no ambiente correto.
@@ -272,3 +272,16 @@
 - [ ] Criar e validar builds de produção para Apple App Store e Google Play.
 - [ ] Finalizar termos de uso, política de privacidade, cancelamento, reembolso e operação de suporte.
 - [ ] Configurar monitoramento, backups e procedimento de resposta a incidentes.
+
+
+## Implementação dos pilares de negócio — próxima rodada
+
+- [x] Implementar aprovação manual efetiva de parceiros e impedir publicação enquanto pendentes.
+- [x] Modelar valores separados de sacola, comissão da CapiLoop e total do checkout.
+- [x] Preparar payload de split payment do Mercado Pago sem afirmar homologação de produção.
+- [x] Implementar expiração automática e consulta segura de sacolas fora da janela de retirada.
+- [x] Proteger estoque durante checkout e confirmação de reserva contra dupla venda.
+- [x] Modelar disputas de retirada e ação “Reportar problema” no pedido.
+- [x] Preparar reembolso automático idempotente e penalização interna do parceiro após disputa válida.
+- [x] Documentar modelos, estados, componentes e fluxos dos três pilares de negócio.
+- [x] Criar testes para aprovação, expiração, estoque, split e disputas.

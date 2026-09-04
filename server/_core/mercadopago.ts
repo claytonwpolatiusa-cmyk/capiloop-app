@@ -22,13 +22,33 @@ export type MercadoPagoCheckoutPreference = {
   initPoint: string;
 };
 
-type PaymentInput = {
+export type PaymentInput = {
   amount: number;
   description: string;
   payerEmail: string;
   externalReference: string;
   idempotencyKey: string;
+  totalBagValue?: number;
+  platformCommissionFee?: number;
+  restaurantNetValue?: number;
+  partnerCollectorId?: string | null;
 };
+
+function splitPayload(input: PaymentInput) {
+  const collectorId = input.partnerCollectorId ? Number(input.partnerCollectorId) : undefined;
+  const hasCollector = Number.isInteger(collectorId) && Number(collectorId) > 0;
+  const fee = input.platformCommissionFee && input.platformCommissionFee > 0 ? input.platformCommissionFee : undefined;
+  return {
+    marketplace_fee: fee,
+    application_fee: fee,
+    collector_id: hasCollector ? collectorId : undefined,
+    metadata: {
+      total_bag_value: input.totalBagValue ?? input.amount,
+      platform_commission_fee: input.platformCommissionFee ?? 0,
+      restaurant_net_value: input.restaurantNetValue ?? input.amount,
+    },
+  };
+}
 
 function getClient() {
   const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
@@ -71,7 +91,8 @@ export async function createPixPayment(input: PaymentInput): Promise<MercadoPago
       payer: { email: input.payerEmail },
       external_reference: input.externalReference,
       notification_url: notificationUrl(),
-    },
+      ...splitPayload(input),
+    } as any,
     requestOptions: { idempotencyKey: input.idempotencyKey },
   });
   return normalizePayment(payment);
@@ -91,7 +112,8 @@ export async function createCardPayment(
       payer: { email: input.payerEmail },
       external_reference: input.externalReference,
       notification_url: notificationUrl(),
-    },
+      ...splitPayload(input),
+    } as any,
     requestOptions: { idempotencyKey: input.idempotencyKey },
   });
   return normalizePayment(payment);
@@ -112,6 +134,7 @@ export async function createCheckoutPreference(input: PaymentInput): Promise<Mer
       payer: { email: input.payerEmail },
       external_reference: input.externalReference,
       notification_url: notificationUrl(),
+      ...splitPayload(input),
       auto_return: "approved",
       back_urls: {
         success: "capiloop://checkout/result?status=approved",
@@ -132,4 +155,28 @@ export async function createCheckoutPreference(input: PaymentInput): Promise<Mer
 export async function getMercadoPagoPayment(paymentId: string): Promise<MercadoPagoPayment> {
   const payment = await getClient().get({ id: paymentId });
   return normalizePayment(payment);
+}
+
+export async function refundMercadoPagoPayment(input: {
+  paymentId: string;
+  amount: number;
+  idempotencyKey: string;
+}) {
+  const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
+  if (!accessToken) throw new MercadoPagoConfigurationError();
+
+  const response = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(input.paymentId)}/refunds`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": input.idempotencyKey,
+    },
+    body: JSON.stringify({ amount: input.amount }),
+  });
+  const payload = await response.json().catch(() => ({})) as { id?: number | string; status?: string; message?: string };
+  if (!response.ok) {
+    throw new Error(payload.message || `Mercado Pago recusou o reembolso (${response.status}).`);
+  }
+  return { id: payload.id ? String(payload.id) : null, status: payload.status ?? "pending" };
 }

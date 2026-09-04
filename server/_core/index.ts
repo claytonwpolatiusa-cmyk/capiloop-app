@@ -10,6 +10,8 @@ import { registerPartnerRoutes } from "../partner-rest";
 import { registerPaymentWebhook } from "../payment-webhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { getDb } from "../db";
+import { runBagLifecycleSweep } from "../bag-lifecycle";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -91,6 +93,21 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`[api] server listening on port ${port}`);
   });
+
+  const runLifecycleSweep = async () => {
+    try {
+      const db = await getDb();
+      if (!db) return;
+      const result = await runBagLifecycleSweep(db);
+      if (result.expiredBags || result.releasedLocks) {
+        console.log(`[bag-lifecycle] expired=${result.expiredBags} releasedLocks=${result.releasedLocks}`);
+      }
+    } catch (error) {
+      console.error("[bag-lifecycle] sweep failed", error);
+    }
+  };
+  void runLifecycleSweep();
+  setInterval(() => void runLifecycleSweep(), 30_000);
 }
 
 startServer().catch(console.error);

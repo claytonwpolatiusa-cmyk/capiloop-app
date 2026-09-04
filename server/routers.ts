@@ -4,6 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { checkoutRouter } from "./routers/checkout";
 import { supportAdminRouter, supportRouter } from "./routers/support";
+import { partnerAdminRouter } from "./routers/partner-admin";
+import { disputesRouter } from "./routers/disputes";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -22,6 +24,8 @@ export const appRouter = router({
   checkout: checkoutRouter,
   support: supportRouter,
   adminSupport: supportAdminRouter,
+  adminPartners: partnerAdminRouter,
+  disputes: disputesRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({
