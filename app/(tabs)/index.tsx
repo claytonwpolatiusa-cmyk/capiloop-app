@@ -2,6 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, useState } from "react";
 import { router } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CapiLoopBrand } from "@/components/capiloop-brand";
 import { CapiLoopMascot } from "@/components/capiloop-mascot";
@@ -20,6 +21,7 @@ import { getFavoriteAvailabilityAlerts } from "@/lib/favorite-alerts";
 
 export default function DiscoverScreen() {
   const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isCompact = height < 720 || width < 365;
   const { impact, favoriteStores, mutedFavoriteStores } = useCapiLoop();
   const { offers, isLoading, error, isReferenceCatalog, refresh } = useCatalog();
@@ -36,8 +38,8 @@ export default function DiscoverScreen() {
   const favoriteBagCount = useMemo(() => favoriteAlerts.reduce((total, alert) => total + alert.availableBags, 0), [favoriteAlerts]);
 
   return (
-    <ScreenContainer edges={["top", "left", "right"]} className="flex-1" containerClassName="bg-background" safeAreaClassName="bg-background">
-      <View style={styles.screen}>
+    <ScreenContainer edges={["left", "right"]} className="flex-1" containerClassName="bg-background" safeAreaClassName="bg-background">
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
         <FlatList
           data={displayedOffers}
           keyExtractor={(item) => item.id}

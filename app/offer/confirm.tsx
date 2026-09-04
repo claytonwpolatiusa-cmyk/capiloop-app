@@ -2,8 +2,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
 import { router, useLocalSearchParams } from "expo-router";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { useState } from "react";
+import { ActivityIndicator, Alert, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { startOAuthLogin } from "@/constants/oauth";
@@ -14,17 +14,17 @@ import { useCapiLoop } from "@/lib/capiloop-store";
 import { createTRPCClient } from "@/lib/trpc";
 import { buildPickupSlots } from "@/lib/pickup-slots";
 
-type PaymentMethod = "pix" | "apple-pay" | "card";
+type PaymentMethod = "pix" | "card";
 
-const paymentMethods: Array<{ id: PaymentMethod; label: string; description: string; icon: "qr-code-2" | "apple" | "credit-card" }> = [
+type PaymentMethodIcon = "qr-code-2" | "credit-card";
+
+const paymentMethods: Array<{ id: PaymentMethod; label: string; description: string; icon: PaymentMethodIcon }> = [
   { id: "pix", label: "PIX", description: "Pague pelo QR Code no Mercado Pago", icon: "qr-code-2" },
-  { id: "apple-pay", label: "Apple Pay", description: "Use quando estiver disponível no seu dispositivo", icon: "apple" },
   { id: "card", label: "Cartão de crédito", description: "Use um cartão salvo ou cadastre outro no Mercado Pago", icon: "credit-card" },
 ];
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
   pix: "PIX",
-  "apple-pay": "Apple Pay",
   card: "Cartão de crédito",
 };
 
@@ -37,6 +37,24 @@ export default function ConfirmReservationScreen() {
   const { reserveOffer, recordRemoteReservation, updateRemoteReservationStatus } = useCapiLoop();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("pix");
   const [isContinuing, setIsContinuing] = useState(false);
+  const loadingPulse = useRef(new Animated.Value(0.92)).current;
+
+  useEffect(() => {
+    if (!isContinuing) {
+      loadingPulse.stopAnimation();
+      loadingPulse.setValue(0.92);
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(loadingPulse, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(loadingPulse, { toValue: 0.92, duration: 650, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [isContinuing, loadingPulse]);
   const offer = getOffer(id);
   const pickupSlots = offer ? buildPickupSlots(offer.pickupWindow) : [];
   const [pickupTime, setPickupTime] = useState(() => pickupSlots[0]?.value ?? "");
@@ -135,7 +153,7 @@ export default function ConfirmReservationScreen() {
 
         {isReference ? <View style={styles.note}><MaterialIcons name="info-outline" size={18} color="#5E7D00" /><Text style={styles.noteText}>Esta é uma oferta de referência. Ela gera um comprovante demonstrativo e não abre uma cobrança.</Text></View> : <>
           <Text style={styles.sectionTitle}>Como quer pagar?</Text>
-          <Text style={styles.sectionCopy}>{selectedMethod === "pix" ? "O QR Code será gerado na próxima etapa." : "Você concluirá a opção escolhida no ambiente seguro do Mercado Pago."}</Text>
+          <Text style={styles.sectionCopy}>{selectedMethod === "pix" ? "O QR Code será gerado na próxima etapa." : "Você concluirá o pagamento no ambiente seguro do Mercado Pago."}</Text>
           <View style={styles.methods}>
             {paymentMethods.map((method) => {
               const selected = selectedMethod === method.id;
@@ -151,11 +169,25 @@ export default function ConfirmReservationScreen() {
         <View style={styles.security}><MaterialIcons name="lock-outline" size={16} color="#4A6410" /><Text style={styles.securityCopy}>{isReference ? "Você pode cancelar antes de concluir." : "A reserva só é confirmada após o retorno do pagamento aprovado."}</Text></View>
       </ScrollView>
 
-      <View style={[styles.footer, isCompact && styles.footerCompact]}><View><Text style={styles.totalLabel}>{isReference ? "SEM COBRANÇA" : "TOTAL"}</Text><Text style={[styles.total, isCompact && styles.totalCompact]}>{isReference ? "Demonstração" : formatCurrency(offer.price)}</Text></View><Pressable disabled={isContinuing} onPress={() => void confirmReservation()} style={({ pressed }) => [styles.confirmButton, isCompact && styles.confirmButtonCompact, (pressed || isContinuing) && { opacity: 0.78, transform: [{ scale: 0.98 }] }]}><Text style={styles.confirmButtonText}>{isContinuing ? "Preparando…" : isReference ? "Confirmar demonstração" : "Reservar e continuar"}</Text><MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" /></Pressable></View>
+      <View style={[styles.footer, isCompact && styles.footerCompact]}>
+        {isContinuing ? (
+          <Animated.View style={[styles.loadingCard, { transform: [{ scale: loadingPulse }] }]}>
+            <View style={styles.loadingIcon}><ActivityIndicator size="small" color="#5E7D00" /></View>
+            <View style={styles.loadingCopy}><Text style={styles.loadingTitle}>Preparando sua reserva</Text><Text style={styles.loadingText}>Protegendo a sacola e conectando ao pagamento…</Text></View>
+          </Animated.View>
+        ) : null}
+        <View style={styles.footerRow}>
+          <View><Text style={styles.totalLabel}>{isReference ? "SEM COBRANÇA" : "TOTAL"}</Text><Text style={[styles.total, isCompact && styles.totalCompact]}>{isReference ? "Demonstração" : formatCurrency(offer.price)}</Text></View>
+          <Pressable disabled={isContinuing} onPress={() => void confirmReservation()} style={({ pressed }) => [styles.confirmButton, isCompact && styles.confirmButtonCompact, (pressed || isContinuing) && { opacity: 0.78, transform: [{ scale: 0.98 }] }]}>
+            <Text style={styles.confirmButtonText}>{isContinuing ? "Preparando…" : isReference ? "Confirmar demonstração" : "Reservar e continuar"}</Text>
+            {isContinuing ? <ActivityIndicator size="small" color="#FFFFFF" /> : <MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" />}
+          </Pressable>
+        </View>
+      </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingBottom: 132 }, contentCompact: { paddingHorizontal: 16, paddingBottom: 122 }, topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, marginBottom: 30 }, topBarCompact: { marginBottom: 20 }, backButton: { width: 43, height: 43, borderRadius: 15, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" }, topTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, topSpacer: { width: 43 }, eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.05 }, title: { color: "#151B14", fontSize: 31, lineHeight: 36, letterSpacing: -1.35, fontWeight: "900", marginTop: 7 }, titleCompact: { fontSize: 27, lineHeight: 32, letterSpacing: -1.1 }, intro: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 10 }, introCompact: { fontSize: 13, lineHeight: 18, marginTop: 8 }, summaryCard: { marginTop: 24, padding: 17, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, summaryHeading: { flexDirection: "row", alignItems: "center", gap: 11 }, bagIcon: { width: 42, height: 42, borderRadius: 15, backgroundColor: "#ECF6CD", alignItems: "center", justifyContent: "center" }, summaryHeadingCopy: { flex: 1 }, store: { color: "#151B14", fontSize: 15, fontWeight: "900" }, subtitle: { color: "#697065", fontSize: 11, marginTop: 2 }, price: { color: "#151B14", fontSize: 18, fontWeight: "900" }, rule: { height: 1, backgroundColor: "#E8ECE4", marginVertical: 16 }, infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 12 }, infoCopy: { flex: 1 }, infoLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.65 }, infoValue: { color: "#151B14", fontSize: 13, lineHeight: 18, fontWeight: "800", marginTop: 3 }, sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", marginTop: 28 }, sectionCopy: { color: "#697065", fontSize: 12, lineHeight: 17, marginTop: 4 }, slotRow: { flexDirection: "row", gap: 8, marginTop: 13 }, slot: { backgroundColor: "#FFFFFF", borderColor: "#E8ECE4", borderRadius: 14, borderWidth: 1, flex: 1, minHeight: 42, alignItems: "center", justifyContent: "center" }, slotSelected: { backgroundColor: "#ECF6CD", borderColor: "#8DAF25" }, slotText: { color: "#697065", fontSize: 12, fontWeight: "900" }, slotTextSelected: { color: "#3B5000" }, methods: { gap: 10, marginTop: 15 }, methodCard: { minHeight: 73, flexDirection: "row", alignItems: "center", gap: 11, padding: 12, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, methodCardSelected: { borderColor: "#8DAF25", backgroundColor: "#F8FCEB" }, methodIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: "#F2F4EF", alignItems: "center", justifyContent: "center" }, methodIconSelected: { backgroundColor: "#D7F07C" }, methodCopy: { flex: 1 }, methodTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, methodDescription: { color: "#697065", fontSize: 10, lineHeight: 14, marginTop: 2 }, radio: { width: 21, height: 21, borderRadius: 11, borderWidth: 1.5, borderColor: "#C7CEC1", alignItems: "center", justifyContent: "center" }, radioSelected: { borderColor: "#5E7D00" }, radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: "#5E7D00" }, note: { flexDirection: "row", alignItems: "flex-start", gap: 9, padding: 14, borderRadius: 16, backgroundColor: "#F4F8E8", marginTop: 24 }, noteText: { flex: 1, color: "#4A6410", fontSize: 11, lineHeight: 16, fontWeight: "700" }, security: { flexDirection: "row", gap: 8, alignItems: "center", paddingTop: 20 }, securityCopy: { flex: 1, color: "#697065", fontSize: 11, lineHeight: 16 }, footer: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingVertical: 15, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#E8ECE4", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, footerCompact: { paddingHorizontal: 16, paddingVertical: 11 }, totalLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, total: { color: "#151B14", fontSize: 20, fontWeight: "900", marginTop: 2 }, totalCompact: { fontSize: 18 }, confirmButton: { minHeight: 54, borderRadius: 17, paddingHorizontal: 15, backgroundColor: "#151B14", flexDirection: "row", alignItems: "center", gap: 7 }, confirmButtonCompact: { minHeight: 50, paddingHorizontal: 12 }, confirmButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" }, missing: { color: "#697065", fontSize: 14, textAlign: "center" },
+  content: { paddingHorizontal: 20, paddingBottom: 132 }, contentCompact: { paddingHorizontal: 16, paddingBottom: 122 }, topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, marginBottom: 30 }, topBarCompact: { marginBottom: 20 }, backButton: { width: 43, height: 43, borderRadius: 15, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4", alignItems: "center", justifyContent: "center" }, topTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, topSpacer: { width: 43 }, eyebrow: { color: "#5E7D00", fontSize: 10, fontWeight: "900", letterSpacing: 1.05 }, title: { color: "#151B14", fontSize: 31, lineHeight: 36, letterSpacing: -1.35, fontWeight: "900", marginTop: 7 }, titleCompact: { fontSize: 27, lineHeight: 32, letterSpacing: -1.1 }, intro: { color: "#697065", fontSize: 14, lineHeight: 20, marginTop: 10 }, introCompact: { fontSize: 13, lineHeight: 18, marginTop: 8 }, summaryCard: { marginTop: 24, padding: 17, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, summaryHeading: { flexDirection: "row", alignItems: "center", gap: 11 }, bagIcon: { width: 42, height: 42, borderRadius: 15, backgroundColor: "#ECF6CD", alignItems: "center", justifyContent: "center" }, summaryHeadingCopy: { flex: 1 }, store: { color: "#151B14", fontSize: 15, fontWeight: "900" }, subtitle: { color: "#697065", fontSize: 11, marginTop: 2 }, price: { color: "#151B14", fontSize: 18, fontWeight: "900" }, rule: { height: 1, backgroundColor: "#E8ECE4", marginVertical: 16 }, infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 12 }, infoCopy: { flex: 1 }, infoLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.65 }, infoValue: { color: "#151B14", fontSize: 13, lineHeight: 18, fontWeight: "800", marginTop: 3 }, sectionTitle: { color: "#151B14", fontSize: 18, fontWeight: "900", marginTop: 28 }, sectionCopy: { color: "#697065", fontSize: 12, lineHeight: 17, marginTop: 4 }, slotRow: { flexDirection: "row", gap: 8, marginTop: 13 }, slot: { backgroundColor: "#FFFFFF", borderColor: "#E8ECE4", borderRadius: 14, borderWidth: 1, flex: 1, minHeight: 42, alignItems: "center", justifyContent: "center" }, slotSelected: { backgroundColor: "#ECF6CD", borderColor: "#8DAF25" }, slotText: { color: "#697065", fontSize: 12, fontWeight: "900" }, slotTextSelected: { color: "#3B5000" }, methods: { gap: 10, marginTop: 15 }, methodCard: { minHeight: 73, flexDirection: "row", alignItems: "center", gap: 11, padding: 12, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E8ECE4" }, methodCardSelected: { borderColor: "#8DAF25", backgroundColor: "#F8FCEB" }, methodIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: "#F2F4EF", alignItems: "center", justifyContent: "center" }, methodIconSelected: { backgroundColor: "#D7F07C" }, methodCopy: { flex: 1 }, methodTitle: { color: "#151B14", fontSize: 14, fontWeight: "900" }, methodDescription: { color: "#697065", fontSize: 10, lineHeight: 14, marginTop: 2 }, radio: { width: 21, height: 21, borderRadius: 11, borderWidth: 1.5, borderColor: "#C7CEC1", alignItems: "center", justifyContent: "center" }, radioSelected: { borderColor: "#5E7D00" }, radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: "#5E7D00" }, note: { flexDirection: "row", alignItems: "flex-start", gap: 9, padding: 14, borderRadius: 16, backgroundColor: "#F4F8E8", marginTop: 24 }, noteText: { flex: 1, color: "#4A6410", fontSize: 11, lineHeight: 16, fontWeight: "700" }, security: { flexDirection: "row", gap: 8, alignItems: "center", paddingTop: 20 }, securityCopy: { flex: 1, color: "#697065", fontSize: 11, lineHeight: 16 },   footer: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingVertical: 15, backgroundColor: "#FFFFFF", borderTopWidth: 1, borderTopColor: "#E8ECE4" }, footerCompact: { paddingHorizontal: 16, paddingVertical: 11 }, footerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, loadingCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 11, marginBottom: 10, borderRadius: 16, backgroundColor: "#F4F8E8", borderWidth: 1, borderColor: "#DCE9B8" }, loadingIcon: { width: 34, height: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#E3F1B9" }, loadingCopy: { flex: 1 }, loadingTitle: { color: "#3B5000", fontSize: 11, fontWeight: "900" }, loadingText: { color: "#697065", fontSize: 10, lineHeight: 14, marginTop: 2 }, totalLabel: { color: "#8C9388", fontSize: 9, fontWeight: "900", letterSpacing: 0.7 }, total: { color: "#151B14", fontSize: 20, fontWeight: "900", marginTop: 2 }, totalCompact: { fontSize: 18 }, confirmButton: { minHeight: 54, borderRadius: 17, paddingHorizontal: 15, backgroundColor: "#151B14", flexDirection: "row", alignItems: "center", gap: 7 }, confirmButtonCompact: { minHeight: 50, paddingHorizontal: 12 }, confirmButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" }, missing: { color: "#697065", fontSize: 14, textAlign: "center" },
 });

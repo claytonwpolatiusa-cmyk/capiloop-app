@@ -285,3 +285,11 @@
 - [x] Preparar reembolso automático idempotente e penalização interna do parceiro após disputa válida.
 - [x] Documentar modelos, estados, componentes e fluxos dos três pilares de negócio.
 - [x] Criar testes para aprovação, expiração, estoque, split e disputas.
+
+
+## Ajustes de checkout e Safe Area
+
+- [x] Remover temporariamente Apple Pay da interface até homologação nativa no iOS.
+- [x] Adicionar animações e estados de carregamento durante o checkout.
+- [x] Corrigir sobreposição do Dynamic Island/notch em Descobrir e Explorar usando `useSafeAreaInsets().top`.
+- [x] Validar tipos, testes e enquadramento após os ajustes.

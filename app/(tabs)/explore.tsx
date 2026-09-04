@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CapiLoopMap } from "@/components/capiloop-map";
 import { OfferCard } from "@/components/offer-card";
@@ -8,9 +9,11 @@ import { useCatalog } from "@/lib/catalog";
 
 export default function ExploreScreen() {
   const { offers, isLoading, error, refresh } = useCatalog();
+  const insets = useSafeAreaInsets();
   return (
-    <ScreenContainer className="flex-1">
-      <FlatList
+    <ScreenContainer edges={["left", "right"]} className="flex-1">
+      <View style={{ flex: 1, paddingTop: insets.top }}>
+        <FlatList
         data={offers}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.content}
@@ -35,8 +38,10 @@ export default function ExploreScreen() {
             <Text style={styles.emptyText}>{error ?? "Volte mais tarde ou atualize para consultar novas publicações."}</Text>
           </View>
         }
-      />
+              />
+      </View>
     </ScreenContainer>
+
   );
 }
 

@@ -82,7 +82,7 @@ export default function OfferDetailScreen() {
               <MetaRow icon="location-on" label="Endereço" value={offer.address} />
             </View>
             <View style={styles.impactRow}><View style={styles.impactIcon}><MaterialIcons name="eco" size={19} color="#151B14" /></View><View style={styles.impactCopyBlock}><Text style={styles.impactTitle}>Uma escolha que faz diferença</Text><Text style={styles.impactCopy}>Esta sacola evita cerca de {offer.co2Kg.toFixed(1).replace(".", ",")} kg de CO₂.</Text></View></View>
-            <View style={styles.paymentHint}><MaterialIcons name={offer.source === "reference" ? "info-outline" : "lock-outline"} size={16} color="#5E7D00" /><Text style={styles.paymentHintText}>{offer.source === "reference" ? "Oferta de referência para você explorar a experiência de reserva. A retirada é sempre no local." : "Somente retirada no local. Escolha o horário e pague por PIX, Apple Pay ou cartão no checkout."}</Text></View>
+            <View style={styles.paymentHint}><MaterialIcons name={offer.source === "reference" ? "info-outline" : "lock-outline"} size={16} color="#5E7D00" /><Text style={styles.paymentHintText}>{offer.source === "reference" ? "Oferta de referência para você explorar a experiência de reserva. A retirada é sempre no local." : "Somente retirada no local. Escolha o horário e pague por PIX ou cartão no checkout."}</Text></View>
           </> : <View style={styles.gallerySection}>
             <Text style={styles.galleryTitle}>Fotos do estabelecimento</Text>
             <Text style={styles.galleryCopy}>Conheça um pouco mais do lugar antes de reservar.</Text>
